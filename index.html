@@ -3,1013 +3,799 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SkyWatch — Seabird Habitat Monitoring Platform</title>
-
-<!-- Mapbox GL JS -->
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-
-<!-- Fonts -->
+<title>SkyWatch — Floating Habitat Platform Finder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
-
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<!-- Mapbox CSS only in head; JS loaded at bottom of body -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
 <style>
-  /* ── Reset & base ── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --sky:#9dc3cc;--mist:#bbced2;--stone:#dbddd7;
+  --paper:#ebe4da;--blush:#edd7c8;--shell:#f6cbbd;
+  --deep:#2d5a65;--accent:#5a8f9e;--beak:#c49a52;
+  --sage:#7a9e6a;--warn:#b07040;
+  --text:#38302a;--muted:#8a7a6a;
+  --panel:rgba(237,228,216,0.94);
+  --border:rgba(157,195,204,0.30);
+  --r:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;color:var(--text)}
 
-  :root {
-    --ocean:   #0a1628;
-    --deep:    #061020;
-    --surface: #0f2240;
-    --panel:   rgba(6,16,32,0.92);
-    --accent:  #4fc3a1;
-    --accent2: #f4a940;
-    --warn:    #e06060;
-    --text:    #d8e8f0;
-    --muted:   #7a99b0;
-    --border:  rgba(79,195,161,0.18);
-    --radius:  10px;
-  }
+/* ── MAP ── */
+#map{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+body.pin-mode #map{cursor:crosshair}
 
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--deep); }
+/* ── STRIPE ── */
+.stripe{position:fixed;top:0;left:0;right:0;height:3px;z-index:200;background:linear-gradient(to right,#9dc3cc,#bbced2,#dbddd7,#ebe4da,#edd7c8,#f6cbbd)}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    display: flex;
-    flex-direction: column;
-  }
+/* ── BANNER ── */
+#alert-banner{
+  position:fixed;top:3px;left:0;right:0;z-index:190;
+  background:linear-gradient(to right,rgba(45,90,101,0.93),rgba(90,143,158,0.88));
+  backdrop-filter:blur(10px);
+  padding:9px 20px 9px 24px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.alert-pill{flex-shrink:0;background:rgba(176,112,64,0.35);border:1px solid rgba(196,154,82,0.5);border-radius:12px;padding:2px 10px;font-size:10px;letter-spacing:0.08em;color:#f0c878;white-space:nowrap}
+.alert-copy{font-size:12px;color:rgba(220,235,240,0.92);line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.alert-copy strong{color:#fff;font-weight:500}
+.alert-copy em{font-family:'Cormorant Garamond',serif;font-style:italic}
+.alert-goal{flex-shrink:0;background:rgba(157,195,204,0.22);border:1px solid rgba(157,195,204,0.35);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--sky);white-space:nowrap;letter-spacing:0.04em}
 
-  /* ── Header ── */
-  header {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 56px;
-    background: var(--deep);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    color: var(--accent);
-    letter-spacing: 0.02em;
-  }
-  .logo span { color: var(--text); font-style: italic; }
-  .tagline { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-  header nav { display: flex; gap: 6px; }
-  header nav button {
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  header nav button:hover, header nav button.active {
-    background: var(--accent);
-    color: var(--deep);
-    border-color: var(--accent);
-    font-weight: 500;
-  }
+/* ── LOGO ── */
+#logo{position:fixed;top:52px;left:20px;z-index:180}
+.logo-box{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;backdrop-filter:blur(10px)}
+.logo-word{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--deep);letter-spacing:0.04em;line-height:1}
+.logo-word em{font-style:italic;color:var(--accent)}
+.logo-tag{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px}
 
-  /* ── Layout ── */
-  .app-body { display: flex; flex: 1; overflow: hidden; }
+/* ── DOCK ── */
+#dock{position:fixed;bottom:28px;left:20px;z-index:180;display:flex;flex-direction:column;gap:8px}
+.dock-btn{width:44px;height:44px;border-radius:50%;background:var(--panel);border:1px solid var(--border);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative}
+.dock-btn:hover{background:rgba(157,195,204,0.3);border-color:var(--sky);transform:scale(1.08)}
+.dock-btn.active{background:rgba(157,195,204,0.4);border-color:var(--accent)}
+.dock-btn svg{width:20px;height:20px;stroke:var(--deep);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dock-tooltip{position:absolute;left:52px;top:50%;transform:translateY(-50%);background:var(--deep);color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s}
+.dock-btn:hover .dock-tooltip{opacity:1}
 
-  /* ── Left panel ── */
-  #panel {
-    width: 320px;
-    flex-shrink: 0;
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    z-index: 5;
-  }
+/* ── RIGHT PANEL ── */
+#panel-sighting{position:fixed;top:52px;right:20px;bottom:28px;width:300px;z-index:180;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-header-stripe{height:2px;border-radius:1px;margin-bottom:12px;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.55}
+.panel-eyebrow{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.panel-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--deep);line-height:1.2}
+.panel-title em{font-style:italic}
+.panel-body{flex:1;overflow-y:auto;padding:14px 18px}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-thumb{background:rgba(157,195,204,0.3);border-radius:3px}
 
-  .panel-section {
-    padding: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .panel-section:last-child { border-bottom: none; }
+.urgency-note{background:linear-gradient(135deg,rgba(176,112,64,0.08),rgba(196,154,82,0.06));border:1px solid rgba(196,154,82,0.22);border-radius:7px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--warn);line-height:1.6}
+.urgency-note strong{display:block;margin-bottom:2px;font-size:12px}
 
-  .section-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 14px;
-    font-weight: 500;
-  }
+.form-row{margin-bottom:10px}
+.form-row label{display:block;font-size:9px;color:var(--muted);margin-bottom:4px;letter-spacing:0.09em;text-transform:uppercase}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 11px;background:rgba(255,255,255,0.55);border:1px solid rgba(157,195,204,0.28);border-radius:6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color 0.2s}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--sky);background:rgba(255,255,255,0.8)}
+.form-row textarea{resize:vertical;min-height:56px}
+.form-row select option{background:var(--paper);color:var(--text)}
+.coords-row{display:flex;gap:7px}
+.coords-row .form-row{flex:1;margin-bottom:0}
 
-  /* Layer toggles */
-  .layer-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-  }
-  .layer-toggle label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .dot {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-  }
-  .dot.pink   { background: #e879a0; }
-  .dot.blue   { background: #56adf5; }
-  .dot.green  { background: var(--accent); }
-  .dot.orange { background: var(--accent2); }
-  .dot.red    { background: var(--warn); }
+.pin-btn{width:100%;padding:8px;border-radius:7px;border:1px dashed rgba(157,195,204,0.5);background:rgba(157,195,204,0.08);color:var(--accent);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;margin-bottom:10px;text-align:center}
+.pin-btn:hover{background:rgba(157,195,204,0.18);border-color:var(--accent)}
+.pin-btn.active{background:rgba(157,195,204,0.25);border-color:var(--accent);border-style:solid}
+.submit-btn{width:100%;padding:10px;border-radius:var(--r);border:none;background:linear-gradient(135deg,rgba(157,195,204,0.7),rgba(122,174,187,0.8));color:var(--deep);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.submit-btn:hover{filter:brightness(1.08)}
 
-  /* Switch */
-  .switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
-  .switch input { opacity: 0; width: 0; height: 0; }
-  .switch-track {
-    position: absolute; inset: 0;
-    background: rgba(255,255,255,0.1);
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .switch-track::after {
-    content: '';
-    position: absolute;
-    width: 14px; height: 14px;
-    left: 3px; top: 3px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-  .switch input:checked + .switch-track { background: var(--accent); }
-  .switch input:checked + .switch-track::after { transform: translateX(16px); }
+.recent-divider{display:flex;align-items:center;gap:8px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:14px 0 10px}
+.recent-divider::before,.recent-divider::after{content:'';flex:1;height:1px;background:rgba(157,195,204,0.25)}
+.s-item{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid rgba(157,195,204,0.12)}
+.s-item:last-child{border-bottom:none}
+.s-ico{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,rgba(157,195,204,0.22),rgba(246,203,189,0.18));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:1px solid rgba(157,195,204,0.2)}
+.s-sp{font-size:12px;color:var(--text);font-weight:500}
+.s-loc{font-size:10px;color:var(--muted);margin-top:1px}
 
-  /* MCA Sliders */
-  .slider-row { margin-bottom: 14px; }
-  .slider-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  .slider-header span:first-child { color: var(--text); }
-  .slider-val { color: var(--accent); font-weight: 500; }
-  .slider-header .type { font-size: 10px; padding: 1px 6px; border-radius: 4px; }
-  .type.pos { background: rgba(79,195,161,0.15); color: var(--accent); }
-  .type.neg { background: rgba(224,96,96,0.15); color: var(--warn); }
+/* ── POPOVERS ── */
+.popover{position:fixed;bottom:28px;left:76px;width:320px;max-height:calc(100vh - 120px);z-index:175;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(12px);display:none;flex-direction:column;overflow:hidden}
+.popover.open{display:flex}
+.popover-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+.popover-header-stripe{height:2px;border-radius:1px;margin-bottom:10px;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.5}
+.popover-eyebrow{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.popover-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;color:var(--deep)}
+.popover-title em{font-style:italic}
+.popover-close{position:absolute;top:12px;right:14px;width:24px;height:24px;border-radius:50%;background:transparent;border:none;cursor:pointer;color:var(--muted);font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.popover-close:hover{background:rgba(157,195,204,0.2)}
+.popover-body{flex:1;overflow-y:auto;padding:14px 16px}
+.popover-body::-webkit-scrollbar{width:3px}
+.popover-body::-webkit-scrollbar-thumb{background:rgba(157,195,204,0.3);border-radius:3px}
 
-  input[type=range] {
-    width: 100%; height: 4px;
-    -webkit-appearance: none;
-    appearance: none;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(79,195,161,0.2);
-  }
+/* painting */
+.painting-img{width:100%;border-radius:7px;overflow:hidden;margin-bottom:12px;line-height:0;background:var(--stone)}
+.painting-img img{width:100%;display:block;object-fit:cover}
+.painting-caption{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:var(--muted);line-height:1.7;text-align:center}
+.palette-row{display:flex;gap:5px;justify-content:center;margin:10px 0}
+.palette-row span{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.55);display:block}
 
-  .mca-score-box {
-    background: rgba(79,195,161,0.08);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    margin-top: 14px;
-    text-align: center;
-  }
-  .mca-score-box .score-num {
-    font-family: 'DM Serif Display', serif;
-    font-size: 36px;
-    color: var(--accent);
-    line-height: 1;
-  }
-  .mca-score-box .score-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+/* species */
+.sp-mini-head{background:linear-gradient(135deg,rgba(157,195,204,0.14),rgba(246,203,189,0.1));border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:12px}
+.sp-mini-head .sci{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--deep)}
+.cr-pill{display:inline-block;margin-top:6px;padding:2px 10px;border-radius:11px;font-size:10px;letter-spacing:0.05em;background:rgba(176,112,64,0.13);color:var(--warn);border:1px solid rgba(176,112,64,0.25)}
+.pop-dots{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+.pop-dot{width:8px;height:8px;border-radius:50%}
+.pop-dot.alive{background:var(--accent);opacity:0.85}
+.pop-dot.lost{background:var(--stone);opacity:0.4}
+.fact-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.fact{background:rgba(157,195,204,0.07);border:1px solid rgba(157,195,204,0.16);border-radius:6px;padding:7px 10px}
+.fact-l{font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:2px}
+.fact-v{font-size:12px;color:var(--deep)}
 
-  /* Sighting form */
-  .form-row { margin-bottom: 12px; }
-  .form-row label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.06em; text-transform: uppercase; }
-  .form-row input, .form-row select, .form-row textarea {
-    width: 100%;
-    padding: 8px 12px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
-    border-color: var(--accent);
-  }
-  .form-row textarea { resize: vertical; min-height: 60px; }
-  .form-row select option { background: var(--deep); }
+/* MCA */
+.slider-row{margin-bottom:13px}
+.sl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.sl-header span:first-child{font-size:12px;color:var(--text)}
+.sl-val{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--accent)}
+.type-tag{font-size:9px;padding:2px 6px;border-radius:3px;letter-spacing:0.05em;margin-left:5px}
+.type-tag.pos{background:rgba(122,158,106,0.14);color:#4a7a42}
+.type-tag.neg{background:rgba(176,112,64,0.14);color:var(--warn)}
+input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.4;border-radius:3px;outline:none;cursor:pointer}
+input[type=range]:hover{opacity:0.65}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--accent);cursor:pointer}
+.score-mini{background:linear-gradient(135deg,rgba(157,195,204,0.12),rgba(246,203,189,0.08));border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;margin-top:14px}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--deep);line-height:1}
+.score-label{font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5}
 
-  .coords-row { display: flex; gap: 8px; }
-  .coords-row .form-row { flex: 1; margin-bottom: 0; }
+/* mangrove */
+.mang-bar-track{background:rgba(157,195,204,0.12);border-radius:3px;height:20px;overflow:hidden;position:relative;margin-bottom:4px}
+.mang-bar-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.mang-label-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:8px}
 
-  .btn {
-    width: 100%;
-    padding: 10px;
-    border-radius: var(--radius);
-    border: none;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-primary { background: var(--accent); color: var(--deep); }
-  .btn-primary:hover { background: #6fd4b8; }
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+/* platform */
+.platform-card{background:rgba(157,195,204,0.07);border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:10px}
+.platform-card h4{font-family:'Cormorant Garamond',serif;font-size:15px;color:var(--deep);margin-bottom:6px}
+.platform-card p{font-size:12px;color:var(--muted);line-height:1.7}
 
-  .hint { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+/* layers */
+.layer-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(157,195,204,0.12)}
+.layer-row:last-child{border-bottom:none}
+.layer-label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text)}
+.ldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sw{position:relative;width:32px;height:18px;flex-shrink:0}
+.sw input{opacity:0;width:0;height:0}
+.sw-track{position:absolute;inset:0;border-radius:18px;cursor:pointer;background:rgba(157,195,204,0.15);border:1px solid rgba(157,195,204,0.3);transition:background 0.2s}
+.sw-track::after{content:'';position:absolute;width:11px;height:11px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:all 0.2s}
+.sw input:checked+.sw-track{background:rgba(90,143,158,0.35);border-color:var(--accent)}
+.sw input:checked+.sw-track::after{transform:translateX(14px);background:var(--deep)}
 
-  /* Recent sightings list */
-  .sighting-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    font-size: 12px;
-  }
-  .sighting-item:last-child { border-bottom: none; }
-  .sighting-icon {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: rgba(79,195,161,0.12);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; flex-shrink: 0;
-  }
-  .sighting-meta { flex: 1; }
-  .sighting-meta .sp { color: var(--text); font-weight: 500; }
-  .sighting-meta .loc { color: var(--muted); font-size: 11px; }
+/* ── MIGRATION LEGEND ── */
+#migration-legend{
+  position:fixed;bottom:44px;right:20px;z-index:180;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r);padding:12px 14px;
+  backdrop-filter:blur(10px);min-width:210px;
+}
+.ml-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.ml-title::before{content:'';width:16px;height:2px;border-radius:1px;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.6;flex-shrink:0}
+.ml-item{display:flex;align-items:center;gap:10px;padding:5px 0}
+.ml-item:not(:last-child){border-bottom:1px solid rgba(157,195,204,0.12)}
+.ml-label{font-size:12px;color:var(--text);font-weight:500}
+.ml-sub{font-size:10px;color:var(--muted);margin-top:1px}
 
-  /* ── Map ── */
-  #map { flex: 1; }
+/* CC */
+#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:linear-gradient(135deg,rgba(157,195,204,0.94),rgba(122,174,187,0.92));color:var(--deep);padding:10px 24px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all 0.3s;pointer-events:none;backdrop-filter:blur(8px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#cc{position:fixed;bottom:8px;right:20px;z-index:180;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);opacity:0.75}
+#cc img{height:14px;opacity:0.6}
+#cc a{color:var(--accent);text-decoration:none}
 
-  /* Map overlay info box */
-  #map-info {
-    position: absolute;
-    bottom: 36px;
-    right: 20px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 18px;
-    font-size: 12px;
-    color: var(--muted);
-    max-width: 220px;
-    z-index: 5;
-    pointer-events: none;
-  }
-  #map-info strong { display: block; color: var(--text); margin-bottom: 4px; font-size: 13px; }
-
-  /* Click-to-log hint */
-  #click-hint {
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--panel);
-    border: 1px solid var(--accent);
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 12px;
-    color: var(--accent);
-    z-index: 5;
-    display: none;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
-  /* Toast */
-  #toast {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: var(--deep);
-    padding: 10px 24px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 500;
-    z-index: 999;
-    opacity: 0;
-    transition: all 0.3s;
-    pointer-events: none;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── Attribution footer ── */
-  footer {
-    flex-shrink: 0;
-    padding: 10px 28px;
-    background: var(--deep);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 11px;
-    color: var(--muted);
-    z-index: 10;
-  }
-  footer a { color: var(--accent); text-decoration: none; }
-  footer a:hover { text-decoration: underline; }
-  .cc-badge { display: flex; align-items: center; gap: 8px; }
-  .cc-badge img { height: 18px; opacity: 0.8; }
-
-  /* Mapbox popup override */
-  .mapboxgl-popup-content {
-    background: var(--panel) !important;
-    color: var(--text) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: var(--radius) !important;
-    padding: 12px 16px !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 13px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4) !important;
-    max-width: 200px;
-  }
-  .mapboxgl-popup-tip { border-top-color: var(--border) !important; }
-  .popup-title { font-weight: 500; color: var(--accent); margin-bottom: 4px; }
-  .popup-body { color: var(--muted); font-size: 12px; line-height: 1.5; }
-
-  /* Scrollbar */
-  #panel::-webkit-scrollbar { width: 4px; }
-  #panel::-webkit-scrollbar-track { background: transparent; }
-  #panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  /* Active tab content */
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+/* mapbox popup */
+.mapboxgl-popup-content{background:rgba(237,228,216,0.97)!important;color:#38302a!important;border:1px solid rgba(157,195,204,0.3)!important;border-radius:10px!important;padding:12px 15px!important;font-family:'DM Sans',sans-serif!important;font-size:13px!important;backdrop-filter:blur(10px)!important;box-shadow:0 4px 20px rgba(45,90,101,0.12)!important;max-width:200px}
+.mapboxgl-popup-tip{display:none!important}
+.popup-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#2d5a65;margin-bottom:3px}
+.popup-body{color:#8a7a6a;font-size:12px;line-height:1.6}
+.mapboxgl-ctrl-bottom-right{bottom:28px!important}
 </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
-<header>
-  <div>
-    <div class="logo">Sky<span>Watch</span></div>
-    <div class="tagline">Seabird Habitat Monitoring · Asia-Pacific</div>
+<div class="stripe"></div>
+
+<!-- ══ FULL-SCREEN MAP ══ -->
+<div id="map"></div>
+
+<!-- ══ BANNER ══ -->
+<div id="alert-banner">
+  <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
+    <span class="alert-pill">CR · ~50 left</span>
+    <span class="alert-copy"><strong>Why this platform exists:</strong> The <em>Chinese Crested Tern</em> is critically endangered — its rocky-islet nesting sites are lost to coastal development. SkyWatch uses GIS to find where <strong>artificial floating platforms</strong> can replace that habitat.</span>
   </div>
-  <nav>
-    <button class="active" onclick="setTab('layers')">Layers</button>
-    <button onclick="setTab('mca')">Suitability</button>
-    <button onclick="setTab('sighting')">Log Sighting</button>
-    <button onclick="setTab('recent')">Community</button>
-    <button onclick="setTab('about')">About</button>
-  </nav>
-</header>
+  <span class="alert-goal">Goal: locate floating habitat sites</span>
+</div>
 
-<!-- ── MAIN ── -->
-<div class="app-body">
+<!-- ══ LOGO ══ -->
+<div id="logo">
+  <div class="logo-box">
+    <div class="logo-word">Sky<em>Watch</em></div>
+    <div class="logo-tag">Floating habitat · GIS platform</div>
+  </div>
+</div>
 
-  <!-- ── LEFT PANEL ── -->
-  <div id="panel">
+<!-- ══ DOCK ══ -->
+<div id="dock">
+  <div class="dock-btn" id="btn-painting" onclick="togglePop('pop-painting')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 17l4-4 4 4 4-5 4 5"/></svg>
+    <span class="dock-tooltip">Watercolour illustration</span>
+  </div>
+  <div class="dock-btn" id="btn-species" onclick="togglePop('pop-species')">
+    <svg viewBox="0 0 24 24"><path d="M2 12c0 0 3-4 7-4c2 0 3 1 5 1c2 0 4-2 6-1c-1 2-3 4-5 4c-2 0-3-1-5-1c-2 0-4 2-4 2z"/><path d="M9 8c0-2 1-4 3-4s3 2 3 4"/></svg>
+    <span class="dock-tooltip">Species profile</span>
+  </div>
+  <div class="dock-btn" id="btn-mca" onclick="togglePop('pop-mca')">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2.5" fill="white" stroke-width="1.6"/><circle cx="15" cy="12" r="2.5" fill="white" stroke-width="1.6"/><circle cx="10" cy="18" r="2.5" fill="white" stroke-width="1.6"/></svg>
+    <span class="dock-tooltip">Suitability model (MCA)</span>
+  </div>
+  <div class="dock-btn" id="btn-mangrove" onclick="togglePop('pop-mangrove')">
+    <svg viewBox="0 0 24 24"><path d="M12 2C8 2 5 5 5 9c0 3 2 5 4 6v5h6v-5c2-1 4-3 4-6 0-4-3-7-7-7z"/></svg>
+    <span class="dock-tooltip">Mangrove loss timeline</span>
+  </div>
+  <div class="dock-btn" id="btn-platform" onclick="togglePop('pop-platform')">
+    <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="4" rx="1"/><path d="M7 10V7M12 10V6M17 10V7"/><path d="M4 14c0 2 1 4 2 4M20 14c0 2-1 4-2 4M12 14v6"/><line x1="8" y1="20" x2="16" y2="20"/></svg>
+    <span class="dock-tooltip">About floating platforms</span>
+  </div>
+  <div class="dock-btn" id="btn-layers" onclick="togglePop('pop-layers')">
+    <svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 12 15 2 8.5"/><polyline points="2 15.5 12 22 22 15.5"/><polyline points="2 12 12 18.5 22 12"/></svg>
+    <span class="dock-tooltip">Map layers</span>
+  </div>
+</div>
 
-    <!-- TAB: LAYERS -->
-    <div id="tab-layers" class="tab-content active">
-      <div class="panel-section">
-        <div class="section-label">Species Distribution</div>
-        <div class="layer-toggle">
-          <label><span class="dot pink"></span>Chinese Crested Tern — distribution</label>
-          <label class="switch"><input type="checkbox" id="toggle-cct-dist" checked onchange="toggleLayer('cct-dist', this.checked)"><span class="switch-track"></span></label>
-        </div>
-        <div class="layer-toggle">
-          <label><span class="dot blue"></span>CCT migration routes</label>
-          <label class="switch"><input type="checkbox" id="toggle-cct-route" checked onchange="toggleLayer('cct-route', this.checked)"><span class="switch-track"></span></label>
-        </div>
-        <div class="layer-toggle">
-          <label><span class="dot orange"></span>Greater Crested Tern — density</label>
-          <label class="switch"><input type="checkbox" id="toggle-gct" checked onchange="toggleLayer('gct-heat', this.checked)"><span class="switch-track"></span></label>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="section-label">Habitat &amp; Environment</div>
-        <div class="layer-toggle">
-          <label><span class="dot green"></span>Mangrove 2020 (GMW)</label>
-          <label class="switch"><input type="checkbox" id="toggle-mang20" checked onchange="toggleLayer('mangrove-2020', this.checked)"><span class="switch-track"></span></label>
-        </div>
-        <div class="layer-toggle">
-          <label><span class="dot" style="background:#8fbc5e;"></span>Mangrove 1996 (GMW)</label>
-          <label class="switch"><input type="checkbox" id="toggle-mang96" onchange="toggleLayer('mangrove-1996', this.checked)"><span class="switch-track"></span></label>
-        </div>
-        <div class="layer-toggle">
-          <label><span class="dot red"></span>Community sightings</label>
-          <label class="switch"><input type="checkbox" id="toggle-sightings" checked onchange="toggleLayer('sightings', this.checked)"><span class="switch-track"></span></label>
-        </div>
-      </div>
-      <div class="panel-section">
-        <div class="section-label">Map Style</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="btn btn-secondary" style="width:auto;padding:5px 10px;font-size:11px;" onclick="setStyle('dark')">Ocean Dark</button>
-          <button class="btn btn-secondary" style="width:auto;padding:5px 10px;font-size:11px;" onclick="setStyle('satellite')">Satellite</button>
-          <button class="btn btn-secondary" style="width:auto;padding:5px 10px;font-size:11px;" onclick="setStyle('light')">Light</button>
-        </div>
-      </div>
+<!-- ══ LOG SIGHTING PANEL ══ -->
+<div id="panel-sighting">
+  <div class="panel-header">
+    <div class="panel-header-stripe"></div>
+    <div class="panel-eyebrow">Citizen science</div>
+    <div class="panel-title">Log a <em>sighting</em></div>
+  </div>
+  <div class="panel-body">
+    <div class="urgency-note">
+      <strong>Every record matters</strong>
+      Only ~50 Chinese Crested Terns remain. Your sighting feeds directly into the habitat suitability model.
     </div>
-
-    <!-- TAB: MCA SUITABILITY -->
-    <div id="tab-mca" class="tab-content">
-      <div class="panel-section">
-        <div class="section-label">MCA Weight Adjustment</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
-          Adjust the importance of each factor. Positive factors attract birds; negative factors repel them. The map updates in real time.
-        </p>
-
-        <div class="slider-row">
-          <div class="slider-header">
-            <span>Food availability (Chl-a)</span>
-            <span class="type pos">attractor</span>
-          </div>
-          <div class="slider-header"><span style="font-size:11px;color:var(--muted);">Weight</span><span class="slider-val" id="val-food">0.35</span></div>
-          <input type="range" min="0" max="1" step="0.05" value="0.35" oninput="updateMCA('food', this.value)"/>
-        </div>
-
-        <div class="slider-row">
-          <div class="slider-header">
-            <span>Mangrove cover</span>
-            <span class="type pos">attractor</span>
-          </div>
-          <div class="slider-header"><span style="font-size:11px;color:var(--muted);">Weight</span><span class="slider-val" id="val-mang">0.25</span></div>
-          <input type="range" min="0" max="1" step="0.05" value="0.25" oninput="updateMCA('mang', this.value)"/>
-        </div>
-
-        <div class="slider-row">
-          <div class="slider-header">
-            <span>Shipping lane density</span>
-            <span class="type neg">stressor</span>
-          </div>
-          <div class="slider-header"><span style="font-size:11px;color:var(--muted);">Weight</span><span class="slider-val" id="val-ship">0.20</span></div>
-          <input type="range" min="0" max="1" step="0.05" value="0.20" oninput="updateMCA('ship', this.value)"/>
-        </div>
-
-        <div class="slider-row">
-          <div class="slider-header">
-            <span>Sea surface temperature</span>
-            <span class="type pos">attractor</span>
-          </div>
-          <div class="slider-header"><span style="font-size:11px;color:var(--muted);">Weight</span><span class="slider-val" id="val-sst">0.20</span></div>
-          <input type="range" min="0" max="1" step="0.05" value="0.20" oninput="updateMCA('sst', this.value)"/>
-        </div>
-
-        <div class="mca-score-box">
-          <div class="score-num" id="mca-score">0.72</div>
-          <div class="score-label">Composite Suitability Index<br/>(top candidate zone average)</div>
-        </div>
-
-        <button class="btn btn-primary" style="margin-top:14px;" onclick="showMCATip()">Apply &amp; Highlight Top Zones</button>
-        <p class="hint">★ In the full version, weights recalculate the heatmap via PostGIS SQL on the server.</p>
-      </div>
+    <button class="pin-btn" id="pin-btn" onclick="togglePin()">📍 Click map to pin location</button>
+    <div class="form-row"><label>Species</label>
+      <select id="f-species">
+        <option value="">— Select species —</option>
+        <option value="cct">Chinese Crested Tern (T. bernsteini)</option>
+        <option value="gct">Greater Crested Tern (T. bergii)</option>
+        <option value="other">Other / uncertain</option>
+      </select>
     </div>
-
-    <!-- TAB: LOG SIGHTING -->
-    <div id="tab-sighting" class="tab-content">
-      <div class="panel-section">
-        <div class="section-label">Submit a Sighting</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-          Help scientists by logging where you saw a tern. Click on the map to auto-fill coordinates, or type them manually.
-        </p>
-        <button class="btn btn-secondary" id="click-map-btn" onclick="enableClickMode()">📍 Click on map to set location</button>
-
-        <div class="form-row">
-          <label>Species</label>
-          <select id="f-species">
-            <option value="">— Select species —</option>
-            <option value="cct">Chinese Crested Tern (Thalasseus bernsteini)</option>
-            <option value="gct">Greater Crested Tern (Thalasseus bergii)</option>
-            <option value="other">Other / Unknown</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <label>Date &amp; Time</label>
-          <input type="datetime-local" id="f-datetime"/>
-        </div>
-
-        <div class="coords-row">
-          <div class="form-row">
-            <label>Latitude</label>
-            <input type="number" id="f-lat" placeholder="e.g. 25.12" step="0.0001"/>
-          </div>
-          <div class="form-row">
-            <label>Longitude</label>
-            <input type="number" id="f-lng" placeholder="e.g. 121.54" step="0.0001"/>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label>Count (individuals seen)</label>
-          <input type="number" id="f-count" placeholder="e.g. 3" min="1"/>
-        </div>
-
-        <div class="form-row">
-          <label>Notes</label>
-          <textarea id="f-notes" placeholder="Behaviour, habitat, weather conditions…"></textarea>
-        </div>
-
-        <div class="form-row">
-          <label>Your name / alias</label>
-          <input type="text" id="f-name" placeholder="e.g. Emma H."/>
-        </div>
-
-        <button class="btn btn-primary" onclick="submitSighting()">Submit Sighting</button>
-        <p class="hint">Data is stored in PostGIS and appears on the map within minutes. All records are CC BY 4.0.</p>
-      </div>
+    <div class="form-row"><label>Date &amp; time</label><input type="datetime-local" id="f-datetime"/></div>
+    <div class="coords-row">
+      <div class="form-row"><label>Lat</label><input type="number" id="f-lat" placeholder="25.12" step="0.0001"/></div>
+      <div class="form-row"><label>Lng</label><input type="number" id="f-lng" placeholder="121.54" step="0.0001"/></div>
     </div>
+    <div class="form-row"><label>Count</label><input type="number" id="f-count" placeholder="e.g. 3" min="1"/></div>
+    <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Behaviour, habitat, weather…"></textarea></div>
+    <div class="form-row"><label>Your name</label><input type="text" id="f-name" placeholder="e.g. Emma H."/></div>
+    <button class="submit-btn" onclick="submitSighting()">Submit sighting</button>
+    <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">Open data · CC BY 4.0 · Stored in PostGIS</p>
+    <div class="recent-divider">Recent records</div>
+    <div id="sighting-list"></div>
+  </div>
+</div>
 
-    <!-- TAB: RECENT SIGHTINGS -->
-    <div id="tab-recent" class="tab-content">
-      <div class="panel-section">
-        <div class="section-label">Recent Community Records</div>
-        <div id="sighting-list">
-          <!-- populated by JS -->
-        </div>
-        <p class="hint" style="margin-top:12px;">These are demo records. Connect to Supabase to show live submissions.</p>
-      </div>
+<!-- ══ POPOVERS ══ -->
+
+<!-- Painting -->
+<div class="popover" id="pop-painting">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Illustration</div>
+    <div class="popover-title"><em>Thalasseus bernsteini</em> — watercolour</div>
+    <button class="popover-close" onclick="closePop('pop-painting')">×</button>
+  </div>
+  <div class="popover-body">
+    <div class="painting-img">
+      <img src="painting_cct.jpg" alt="Watercolour of Chinese Crested Terns" onerror="this.parentElement.style.cssText='height:160px;background:linear-gradient(135deg,#9dc3cc,#bbced2,#dbddd7,#edd7c8);border-radius:7px;display:flex;align-items:center;justify-content:center';this.style.display='none'"/>
     </div>
-
-    <!-- TAB: ABOUT -->
-    <div id="tab-about" class="tab-content">
-      <div class="panel-section">
-        <div class="section-label">About This Project</div>
-        <p style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;">
-          <strong style="color:var(--accent);">SkyWatch</strong> is a cloud-based Web GIS platform for monitoring and predicting seabird migration patterns in the Asia-Pacific region, with a focus on the critically endangered Chinese Crested Tern (<em>Thalasseus bernsteini</em>).
-        </p>
-        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:12px;">
-          The platform integrates satellite-derived environmental layers (Chlorophyll-a, SST, mangrove extent) with citizen science observations to perform Multi-Criteria Analysis (MCA) and identify optimal locations for artificial floating habitat platforms.
-        </p>
-        <div style="margin-top:16px;padding:14px;background:rgba(79,195,161,0.06);border-radius:var(--radius);border:1px solid var(--border);">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.1em;">Data Sources</div>
-          <ul style="font-size:12px;color:var(--muted);line-height:2;padding-left:16px;">
-            <li>Movebank — tern migration routes</li>
-            <li>Global Mangrove Watch (GMW) — habitat boundaries</li>
-            <li>MODIS/VIIRS via GEE — Chlorophyll-a, SST</li>
-            <li>Global Fishing Watch — shipping density</li>
-            <li>Community submissions (this platform)</li>
-          </ul>
-        </div>
-        <div style="margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6;">
-          <strong style="color:var(--text);">Tech stack:</strong> Mapbox GL JS · PostGIS / Supabase · GeoServer · Google Earth Engine · QGIS
-        </div>
-      </div>
+    <div class="palette-row">
+      <span style="background:#9dc3cc"></span><span style="background:#bbced2"></span>
+      <span style="background:#dbddd7"></span><span style="background:#c49a52"></span>
+      <span style="background:#7a9e6a"></span><span style="background:#f6cbbd"></span>
     </div>
+    <p class="painting-caption">Chinese Crested Terns nesting among coastal vegetation. Watercolour on paper.</p>
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px">The platform's colour palette — from sky-teal to shell-pink — is drawn directly from this painting, connecting the scientific data to the living bird.</p>
+  </div>
+</div>
 
-  </div><!-- end panel -->
+<!-- Species -->
+<div class="popover" id="pop-species">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Species profile</div>
+    <div class="popover-title">The bird we are <em>protecting</em></div>
+    <button class="popover-close" onclick="closePop('pop-species')">×</button>
+  </div>
+  <div class="popover-body">
+    <div class="sp-mini-head">
+      <div class="sci">Thalasseus bernsteini</div>
+      <div style="font-size:10px;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-top:2px">Chinese Crested Tern</div>
+      <div class="cr-pill">CR · Critically Endangered · IUCN</div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">Each dot = one individual. Approximately <strong style="color:var(--deep)">~50 wild birds</strong> remain.</p>
+    <div class="pop-dots" id="sp-dots"></div>
+    <div class="fact-grid">
+      <div class="fact"><div class="fact-l">Wingspan</div><div class="fact-v">86–94 cm</div></div>
+      <div class="fact"><div class="fact-l">Mass</div><div class="fact-v">~180 g</div></div>
+      <div class="fact"><div class="fact-l">Breeding</div><div class="fact-v">E. China Sea</div></div>
+      <div class="fact"><div class="fact-l">Wintering</div><div class="fact-v">Philippines</div></div>
+      <div class="fact"><div class="fact-l">Nest type</div><div class="fact-v">Rocky islets</div></div>
+      <div class="fact"><div class="fact-l">Known since</div><div class="fact-v">1863</div></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:12px">Primary threats: egg collection, coastal infrastructure destroying nesting islets.</p>
+  </div>
+</div>
 
-  <!-- ── MAP ── -->
-  <div style="position:relative;flex:1;">
-    <div id="map"></div>
-    <div id="click-hint">📍 Click anywhere on the ocean to log that location</div>
-    <div id="map-info">
-      <strong>How to use</strong>
-      Toggle layers on the left panel. Switch to <em>Suitability</em> to adjust MCA weights. Use <em>Log Sighting</em> to contribute data.
+<!-- MCA -->
+<div class="popover" id="pop-mca">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Multi-criteria analysis</div>
+    <div class="popover-title">Habitat <em>suitability</em> model</div>
+    <button class="popover-close" onclick="closePop('pop-mca')">×</button>
+  </div>
+  <div class="popover-body">
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px">Adjust weights to explore how floating platform placement priorities shift. Full build reruns a PostGIS spatial query.</p>
+    <div class="slider-row">
+      <div class="sl-header"><span>Food availability (Chl-a)<span class="type-tag pos">+</span></span><span class="sl-val" id="val-food">0.35</span></div>
+      <input type="range" min="0" max="1" step="0.05" value="0.35" oninput="updateMCA('food',this.value)"/>
+    </div>
+    <div class="slider-row">
+      <div class="sl-header"><span>Mangrove cover<span class="type-tag pos">+</span></span><span class="sl-val" id="val-mang">0.25</span></div>
+      <input type="range" min="0" max="1" step="0.05" value="0.25" oninput="updateMCA('mang',this.value)"/>
+    </div>
+    <div class="slider-row">
+      <div class="sl-header"><span>Shipping lane density<span class="type-tag neg">−</span></span><span class="sl-val" id="val-ship">0.20</span></div>
+      <input type="range" min="0" max="1" step="0.05" value="0.20" oninput="updateMCA('ship',this.value)"/>
+    </div>
+    <div class="slider-row">
+      <div class="sl-header"><span>Sea surface temperature<span class="type-tag pos">+</span></span><span class="sl-val" id="val-sst">0.20</span></div>
+      <input type="range" min="0" max="1" step="0.05" value="0.20" oninput="updateMCA('sst',this.value)"/>
+    </div>
+    <div class="score-mini">
+      <div class="score-num" id="mca-score">0.72</div>
+      <div class="score-label">Composite suitability index<br/>top candidate zone average</div>
     </div>
   </div>
+</div>
 
-</div><!-- end app-body -->
+<!-- Mangrove -->
+<div class="popover" id="pop-mangrove">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Habitat loss</div>
+    <div class="popover-title">Mangrove <em>decline</em> 1996–2020</div>
+    <button class="popover-close" onclick="closePop('pop-mangrove')">×</button>
+  </div>
+  <div class="popover-body">
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px">Global mangrove cover relative to 1996 baseline (Global Mangrove Watch).</p>
+    <div id="mang-bars"></div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:12px">By 2020, approximately <strong style="color:var(--deep)">8.6%</strong> of global mangrove cover — ~11,900 km² — had been lost, directly destroying nesting habitat for the Chinese Crested Tern.</p>
+  </div>
+</div>
 
-<!-- ── FOOTER ── -->
-<footer>
-  <div class="cc-badge">
-    <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">
-      <img src="https://licensebuttons.net/l/by/4.0/88x31.png" alt="CC BY 4.0 License"/>
-    </a>
-    <span>
-      "SkyWatch: Cloud-based Open-source GIS Application for Seabird Migration" by
-      <a href="#" target="_blank" rel="noopener">Your Name</a> —
-      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">CC BY 4.0</a>
-    </span>
+<!-- Platform -->
+<div class="popover" id="pop-platform">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Our goal</div>
+    <div class="popover-title">Floating habitat <em>platforms</em></div>
+    <button class="popover-close" onclick="closePop('pop-platform')">×</button>
   </div>
-  <div>
-    Map © <a href="https://www.mapbox.com/" target="_blank">Mapbox</a> ·
-    Data © <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> contributors ·
-    Species data: <a href="https://www.movebank.org/" target="_blank">Movebank</a> ·
-    Habitat: <a href="https://www.globalmangrovewatch.org/" target="_blank">GMW</a>
+  <div class="popover-body">
+    <div style="width:100%;border-radius:7px;overflow:hidden;margin-bottom:12px;min-height:100px;background:linear-gradient(135deg,rgba(157,195,204,0.2),rgba(246,203,189,0.15));display:flex;align-items:center;justify-content:center">
+      <img src="platform_diagram.jpg" alt="Floating platform diagram" style="width:100%;display:block;border-radius:7px" onerror="this.style.display='none'"/>
+    </div>
+    <div class="platform-card"><h4>What is a floating platform?</h4><p>An engineered raft anchored in coastal waters, mimicking the rocky-islet conditions Chinese Crested Terns require — in locations where natural sites have been destroyed.</p></div>
+    <div class="platform-card"><h4>How does GIS help?</h4><p>Layering food availability (Chl-a), habitat (mangroves), shipping noise, and SST, the MCA model identifies optimal coordinates for deployment.</p></div>
+    <div class="platform-card"><h4>Expected output</h4><p>A ranked list of candidate sites — e.g. "14.2°N, 122.8°E — suitability 0.82" — giving conservation teams a data-backed starting point.</p></div>
   </div>
-</footer>
+</div>
+
+<!-- Layers -->
+<div class="popover" id="pop-layers">
+  <div class="popover-header">
+    <div class="popover-header-stripe"></div>
+    <div class="popover-eyebrow">Map layers</div>
+    <div class="popover-title">Data <em>layers</em></div>
+    <button class="popover-close" onclick="closePop('pop-layers')">×</button>
+  </div>
+  <div class="popover-body">
+    <p style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Studio layers — edit in Mapbox Studio</p>
+    <div class="layer-row"><div class="layer-label"><span class="ldot" style="background:#c47a72"></span>CCT distribution (maintern-6edtki)</div><span style="font-size:10px;color:var(--muted)">Studio</span></div>
+    <div class="layer-row"><div class="layer-label"><span class="ldot" style="background:#7aaebb"></span>Migration path (migrationpath-781r6h)</div><span style="font-size:10px;color:var(--muted)">Studio</span></div>
+    <p style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin:12px 0 10px">Code layers — togglable</p>
+    <div class="layer-row"><div class="layer-label"><span class="ldot" style="background:#5a8f9e"></span>Community sightings</div><label class="sw"><input type="checkbox" checked onchange="toggleLayer('sightings',this.checked)"/><span class="sw-track"></span></label></div>
+    <div class="layer-row"><div class="layer-label"><span class="ldot" style="background:#7aaebb"></span>Spring migration (Mar–May)</div><label class="sw"><input type="checkbox" checked onchange="toggleLayer('arcs-spring',this.checked);toggleLayer('arcs-glow',this.checked)"/><span class="sw-track"></span></label></div>
+    <div class="layer-row"><div class="layer-label"><span class="ldot" style="background:#c49a52"></span>Fall migration (Aug–Oct)</div><label class="sw"><input type="checkbox" checked onchange="toggleLayer('arcs-fall',this.checked)"/><span class="sw-track"></span></label></div>
+    <div style="margin-top:14px;background:rgba(157,195,204,0.08);border:1px solid var(--border);border-radius:7px;padding:10px 12px">
+      <p style="font-size:11px;color:var(--muted);line-height:1.7">Studio layers sync automatically when you <strong>Publish</strong> in Mapbox Studio. No code change needed.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MIGRATION LEGEND (bottom-right of map) ══ -->
+<div id="migration-legend">
+  <div class="ml-title">Migration routes</div>
+  <div class="ml-item">
+    <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#7aaebb" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
+    <div>
+      <div class="ml-label">Spring (Mar–May)</div>
+      <div class="ml-sub">Northbound · E. Indonesia → Korea</div>
+    </div>
+  </div>
+  <div class="ml-item">
+    <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#c49a52" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
+    <div>
+      <div class="ml-label">Fall (Aug–Oct)</div>
+      <div class="ml-sub">Southbound · Korea → E. Indonesia</div>
+    </div>
+  </div>
+</div>
+
+<div id="cc">
+  <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener"><img src="https://licensebuttons.net/l/by/4.0/88x31.png" alt="CC BY 4.0"/></a>
+  <span>SkyWatch by <a href="#">Your Name</a> — <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a></span>
+</div>
 
 <div id="toast"></div>
 
+<!-- ══════════════════════════════════════
+     NON-MAP JS — runs immediately
+══════════════════════════════════════ -->
 <script>
-// ──────────────────────────────────────────────
-// CONFIG — replace with your real token
-// ──────────────────────────────────────────────
-mapboxgl.accessToken = 'pk.eyJ1IjoiZW1tYWh1MjAwNjAxMzEiLCJhIjoiY21vNm8xMG5sMjN3djJxcWF5eXJqdTljdyJ9.3bLzesxIGFlguMHlKcPrRg';
+/* Population dots */
+(function(){
+  const el=document.getElementById('sp-dots');
+  if(!el) return;
+  for(let i=0;i<80;i++){
+    const d=document.createElement('div');
+    d.className='pop-dot '+(i<50?'alive':'lost');
+    el.appendChild(d);
+  }
+})();
 
-// ──────────────────────────────────────────────
-// DEMO DATA — replace with your real GeoJSON
-// from QGIS export or Supabase fetch
-// ──────────────────────────────────────────────
-const CCT_DISTRIBUTION = {
-  type: 'FeatureCollection',
-  features: [
-    // Key CCT sighting locations from your map
-    {type:'Feature',geometry:{type:'Point',coordinates:[121.5,25.1]},properties:{name:'Taiwan Strait'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[122.3,29.9]},properties:{name:'Zhoushan Islands'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[119.5,24.4]},properties:{name:'Fujian Coast'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[126.5,34.5]},properties:{name:'Yellow Sea'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[128.2,36.6]},properties:{name:'Korean Strait'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[124.0,37.8]},properties:{name:'Bohai Sea'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[130.5,31.2]},properties:{name:'East China Sea'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[118.1,22.3]},properties:{name:'South China'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[120.9,23.6]},properties:{name:'Taiwan South'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[122.8,31.8]},properties:{name:'Yangtze Delta'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[116.6,14.2]},properties:{name:'Philippines Sea'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[120.2,15.8]},properties:{name:'Luzon Coast'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[125.3,7.1]},properties:{name:'Mindanao'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[127.8,11.5]},properties:{name:'Philippines East'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[128.5,6.8]},properties:{name:'Leyte Gulf'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[135.2,4.2]},properties:{name:'Palau vicinity'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[128.9,1.5]},properties:{name:'Sulawesi'}},
-    {type:'Feature',geometry:{type:'Point',coordinates:[99.8,5.6]},properties:{name:'Strait of Malacca'}}
-  ]
-};
+/* Mangrove bars */
+(function(){
+  const DATA=[
+    {yr:'1996',pct:100,col:'#7a9e6a'},{yr:'2007',pct:96.8,col:'#8aa87a'},
+    {yr:'2008',pct:96.1,col:'#96a87a'},{yr:'2009',pct:95.7,col:'#a4a87a'},
+    {yr:'2010',pct:95.4,col:'#b0a87a'},{yr:'2015',pct:93.2,col:'#c4966a'},
+    {yr:'2016',pct:92.9,col:'#c48060'},{yr:'2020',pct:91.4,col:'#b07040'},
+  ];
+  const el=document.getElementById('mang-bars');
+  if(!el) return;
+  DATA.forEach(d=>{
+    el.innerHTML+=`<div class="mang-label-row"><span>${d.yr}</span><span style="color:${d.pct<100?'var(--warn)':'var(--sage)'}">${d.pct.toFixed(1)}%</span></div><div class="mang-bar-track"><div class="mang-bar-fill" style="width:0%;background:${d.col}" data-w="${d.pct}"></div></div>`;
+  });
+  setTimeout(()=>{ document.querySelectorAll('.mang-bar-fill').forEach(b=>{b.style.width=b.dataset.w+'%'}); },300);
+})();
 
-const CCT_ROUTE = {
-  type: 'FeatureCollection',
-  features: [{
-    type: 'Feature',
-    geometry: {
-      type: 'LineString',
-      coordinates: [
-        [121.5,25.1],[122.3,29.9],[124.0,37.8],[128.2,36.6],
-        [126.5,34.5],[130.5,31.2],[122.8,31.8],[119.5,24.4],
-        [118.1,22.3],[116.6,14.2],[120.2,15.8],[121.5,25.1]
-      ]
-    },
-    properties: {name:'CCT Migration Route'}
-  }]
-};
+/* MCA */
+const mw={food:.35,mang:.25,ship:.20,sst:.20};
+function updateMCA(k,v){
+  mw[k]=parseFloat(v);
+  document.getElementById('val-'+k).textContent=parseFloat(v).toFixed(2);
+  const r=mw.food*.8+mw.mang*.6-mw.ship*.5+mw.sst*.7;
+  const t=mw.food+mw.mang+mw.ship+mw.sst;
+  document.getElementById('mca-score').textContent=Math.min(1,Math.max(0,r/Math.max(t,.01))).toFixed(2);
+}
 
-// Demo community sightings
-const DEMO_SIGHTINGS = [
-  {lat:25.1,lng:121.5,species:'Chinese Crested Tern',user:'Wei L.',count:2,date:'2026-04-12',emoji:'🐦'},
-  {lat:29.9,lng:122.3,species:'Greater Crested Tern',user:'Emma H.',count:5,date:'2026-04-08',emoji:'🐦'},
-  {lat:24.4,lng:119.5,species:'Chinese Crested Tern',user:'Anon',count:1,date:'2026-03-30',emoji:'🐦'},
-  {lat:34.5,lng:126.5,species:'Greater Crested Tern',user:'K. Park',count:8,date:'2026-03-15',emoji:'🐦'},
-  {lat:22.3,lng:118.1,species:'Unknown tern',user:'M. Santos',count:3,date:'2026-03-01',emoji:'🐦'}
+/* Popovers */
+function togglePop(id){
+  const el=document.getElementById(id);
+  const wasOpen=el.classList.contains('open');
+  document.querySelectorAll('.popover').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.dock-btn').forEach(b=>b.classList.remove('active'));
+  if(!wasOpen){
+    el.classList.add('open');
+    const m={'pop-painting':'btn-painting','pop-species':'btn-species','pop-mca':'btn-mca','pop-mangrove':'btn-mangrove','pop-platform':'btn-platform','pop-layers':'btn-layers'};
+    if(m[id]) document.getElementById(m[id]).classList.add('active');
+  }
+}
+function closePop(id){
+  document.getElementById(id).classList.remove('open');
+  document.querySelectorAll('.dock-btn').forEach(b=>b.classList.remove('active'));
+}
+
+/* Toast */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* Datetime default */
+document.getElementById('f-datetime').value=new Date().toISOString().slice(0,16);
+</script>
+
+<!-- Mapbox GL JS — loaded after all HTML, before map code -->
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<script>
+/* ── Data ── */
+const MIGRATION_ARCS=[
+  // ══ 春季北上 Spring (Mar–May) 蓝色 ══
+  {from:[129.237, -2.901], to:[127.500,  4.500], season:'spring'},
+  {from:[127.500,  4.500], to:[126.200,  8.500], season:'spring'},
+  {from:[126.200,  8.500], to:[125.800, 13.500], season:'spring'},
+  {from:[125.800, 13.500], to:[124.500, 18.000], season:'spring'},
+  {from:[124.500, 18.000], to:[122.800, 22.000], season:'spring'},
+  {from:[122.800, 22.000], to:[121.200, 25.200], season:'spring'},
+  {from:[121.200, 25.200], to:[120.300, 26.500], season:'spring'},
+  {from:[120.300, 26.500], to:[120.200, 28.000], season:'spring'},
+  {from:[120.200, 28.000], to:[121.800, 30.900], season:'spring'},
+  {from:[121.800, 30.900], to:[121.500, 32.200], season:'spring'},
+  {from:[121.500, 32.200], to:[119.500, 35.300], season:'spring'},
+  {from:[119.500, 35.300], to:[126.900, 37.400], season:'spring'},
+
+  // ══ 秋季南下 Fall (Aug–Oct) 琥珀色 ══
+  {from:[126.900, 37.400], to:[119.500, 35.300], season:'fall'},
+  {from:[119.500, 35.300], to:[121.500, 32.200], season:'fall'},
+  {from:[121.500, 32.200], to:[121.800, 30.900], season:'fall'},
+  {from:[121.800, 30.900], to:[120.100, 27.800], season:'fall'},
+  {from:[120.100, 27.800], to:[119.400, 25.800], season:'fall'},
+  {from:[119.400, 25.800], to:[119.200, 23.500], season:'fall'},
+  {from:[119.200, 23.500], to:[119.500, 20.000], season:'fall'},
+  {from:[119.500, 20.000], to:[119.800, 16.000], season:'fall'},
+  {from:[119.800, 16.000], to:[120.500, 13.500], season:'fall'},
+  {from:[120.500, 13.500], to:[121.800,  9.500], season:'fall'},
+  {from:[121.800,  9.500], to:[123.800,  5.000], season:'fall'},
+  {from:[123.800,  5.000], to:[126.500,  1.500], season:'fall'},
+  {from:[126.500,  1.500], to:[127.800, -0.500], season:'fall'},
+  {from:[127.800, -0.500], to:[128.200, -4.000], season:'fall'},
 ];
+const DEMO=[
+  {lat:25.1,lng:121.5,species:'Chinese Crested Tern',user:'Wei L.',count:2,date:'2026-04-12'},
+  {lat:29.9,lng:122.3,species:'Greater Crested Tern',user:'Emma H.',count:5,date:'2026-04-08'},
+  {lat:24.4,lng:119.5,species:'Chinese Crested Tern',user:'Anon',count:1,date:'2026-03-30'},
+  {lat:34.5,lng:126.5,species:'Greater Crested Tern',user:'K. Park',count:8,date:'2026-03-15'},
+];
+let sightings=[...DEMO];
+let map, pinMode=false, pinMarkerEl=null;
 
-let sightings = [...DEMO_SIGHTINGS];
-let clickMode = false;
-let map;
+/* ── Init map — loads YOUR Studio style with fresh=true so Publish syncs ── */
+mapboxgl.accessToken='pk.eyJ1IjoiZW1tYWh1MjAwNjAxMzEiLCJhIjoiY21vNm8xMG5sMjN3djJxcWF5eXJqdTljdyJ9.3bLzesxIGFlguMHlKcPrRg';
 
-// ──────────────────────────────────────────────
-// INIT MAP
-// ──────────────────────────────────────────────
-function initMap() {
-  map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/emmahu20060131/cmodwrtal000t01sl8df9h15b',
-    center: [125, 20],
-    zoom: 3.5,
-    projection: 'mercator'
-  });
+map=new mapboxgl.Map({
+  container:'map',
+  // fresh=true → bypasses CDN cache, always loads latest published style
+  style:'mapbox://styles/emmahu20060131/cmodwrtal000t01sl8df9h15b?fresh=true',
+  center:[123, 18],
+  zoom:3.2,
+  projection:'globe'
+});
 
-  map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-  map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
+map.addControl(new mapboxgl.ScaleControl(),'bottom-right');
 
-  map.on('load', () => {
-    addLayers();
-    populateSightingsList();
-  });
+/* ── Click to pin sighting location ── */
+map.on('click',e=>{
+  if(!pinMode) return;
+  const{lng,lat}=e.lngLat;
+  document.getElementById('f-lat').value=lat.toFixed(4);
+  document.getElementById('f-lng').value=lng.toFixed(4);
+  disablePin();
+  showToast('📍 Location pinned — fill in the rest of the form.');
+  pulse(lng,lat);
+});
 
-  // Click handler — for sighting mode
-  map.on('click', (e) => {
-    if (!clickMode) return;
-    document.getElementById('f-lat').value = e.lngLat.lat.toFixed(4);
-    document.getElementById('f-lng').value = e.lngLat.lng.toFixed(4);
-    disableClickMode();
-    setTab('sighting');
-    showToast('Location set! Fill in the rest of the form.');
-  });
+map.on('load',()=>{
+  /* ════════════════════════════════════════
+     CODE-ONLY LAYERS (dynamic / interactive)
+     Studio layers (CCT points, migration path)
+     are already in the style — don't re-add them
+  ════════════════════════════════════════ */
 
-  // Popup on distribution points
-  map.on('click', 'cct-dist', (e) => {
-    if (clickMode) return;
-    const p = e.features[0].properties;
-    new mapboxgl.Popup()
-      .setLngLat(e.features[0].geometry.coordinates)
-      .setHTML(`<div class="popup-title">CCT Record</div><div class="popup-body">${p.name}</div>`)
-      .addTo(map);
-  });
-
-  // Popup on sightings
-  map.on('click', 'sightings', (e) => {
-    if (clickMode) return;
-    const p = e.features[0].properties;
-    new mapboxgl.Popup()
-      .setLngLat(e.features[0].geometry.coordinates)
-      .setHTML(`<div class="popup-title">${p.species}</div><div class="popup-body">Count: ${p.count}<br/>By: ${p.user}<br/>${p.date}</div>`)
-      .addTo(map);
-  });
-
-  map.on('mouseenter', 'cct-dist', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'cct-dist', () => { map.getCanvas().style.cursor = ''; });
-  map.on('mouseenter', 'sightings', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'sightings', () => { map.getCanvas().style.cursor = ''; });
-}
-
-function addLayers() {
-  // ── CCT Distribution (pink circles) ──
-  map.addSource('cct-dist-src', { type: 'geojson', data: CCT_DISTRIBUTION });
+  /* 1. Community sightings — added by users in real time */
+  map.addSource('sightings-src',{type:'geojson',data:s2g()});
   map.addLayer({
-    id: 'cct-dist',
-    type: 'circle',
-    source: 'cct-dist-src',
-    paint: {
-      'circle-radius': 7,
-      'circle-color': '#e879a0',
-      'circle-opacity': 0.85,
-      'circle-stroke-width': 1.5,
-      'circle-stroke-color': '#fff'
+    id:'sightings',type:'circle',source:'sightings-src',
+    paint:{
+      'circle-radius':9,
+      'circle-color':'#5a8f9e',
+      'circle-opacity':0.9,
+      'circle-stroke-width':2,
+      'circle-stroke-color':'#ebe4da'
     }
   });
 
-  // ── CCT Migration route (dashed blue line) ──
-  map.addSource('cct-route-src', { type: 'geojson', data: CCT_ROUTE });
-  map.addLayer({
-    id: 'cct-route',
-    type: 'line',
-    source: 'cct-route-src',
-    paint: {
-      'line-color': '#56adf5',
-      'line-width': 2,
-      'line-dasharray': [4, 2],
-      'line-opacity': 0.8
+  /* 2. Animated arc lines — spring (blue) and fall (amber) */
+  function arcPts(from,to){
+    const mid=[(from[0]+to[0])/2,(from[1]+to[1])/2+1.5],pts=[];
+    for(let i=0;i<=40;i++){
+      const t=i/40;
+      pts.push([
+        (1-t)*(1-t)*from[0]+2*(1-t)*t*mid[0]+t*t*to[0],
+        (1-t)*(1-t)*from[1]+2*(1-t)*t*mid[1]+t*t*to[1]
+      ]);
     }
-  });
-
-  // ── Greater Crested Tern heatmap (orange/yellow) ──
-  // Simulated from your map's density distribution around Australia
-  const gctPoints = {
-    type: 'FeatureCollection',
-    features: [
-      {type:'Feature',geometry:{type:'Point',coordinates:[151.5,-23.8]},properties:{weight:0.9}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[153.0,-26.2]},properties:{weight:0.8}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[114.5,-22.1]},properties:{weight:0.7}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[137.5,-35.5]},properties:{weight:0.6}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[144.5,-38.2]},properties:{weight:0.7}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[115.2,-33.8]},properties:{weight:0.8}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[130.8,-12.4]},properties:{weight:0.5}},
-      {type:'Feature',geometry:{type:'Point',coordinates:[150.2,-35.4]},properties:{weight:0.6}},
-    ]
-  };
-  map.addSource('gct-src', { type: 'geojson', data: gctPoints });
-  map.addLayer({
-    id: 'gct-heat',
-    type: 'heatmap',
-    source: 'gct-src',
-    paint: {
-      'heatmap-weight': ['get','weight'],
-      'heatmap-intensity': 1.2,
-      'heatmap-radius': 60,
-      'heatmap-opacity': 0.65,
-      'heatmap-color': [
-        'interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(255,255,0,0)',
-        0.3, 'rgba(244,169,64,0.5)',
-        0.6, 'rgba(230,100,30,0.7)',
-        1, 'rgba(200,50,10,0.9)'
-      ]
-    }
-  });
-
-  // ── Community sightings ──
-  map.addSource('sightings-src', {
-    type: 'geojson',
-    data: sightingsToGeoJSON()
-  });
-  map.addLayer({
-    id: 'sightings',
-    type: 'circle',
-    source: 'sightings-src',
-    paint: {
-      'circle-radius': 8,
-      'circle-color': '#4fc3a1',
-      'circle-opacity': 0.9,
-      'circle-stroke-width': 2,
-      'circle-stroke-color': '#fff'
-    }
-  });
-
-  // NOTE: For your real QGIS mangrove data:
-  // 1. In QGIS: Layer → Export → Save Features As → GeoJSON
-  // 2. Upload the file to Mapbox Studio as a Tileset
-  // 3. Replace the source below with: { type: 'vector', url: 'mapbox://YOUR-TILESET-ID' }
-  // The layer id in addLayer should have source-layer: 'YOUR-LAYER-NAME'
-  //
-  // For now, we reference placeholder tileset IDs:
-  // map.addSource('mangrove-2020-src', { type: 'vector', url: 'mapbox://your-username.mangrove-2020' });
-  // map.addSource('mangrove-1996-src', { type: 'vector', url: 'mapbox://your-username.mangrove-1996' });
-}
-
-function sightingsToGeoJSON() {
-  return {
-    type: 'FeatureCollection',
-    features: sightings.map(s => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
-      properties: { species: s.species, user: s.user, count: s.count, date: s.date }
+    return pts;
+  }
+  map.addSource('arcs-src',{type:'geojson',data:{type:'FeatureCollection',
+    features:MIGRATION_ARCS.map((a,i)=>({
+      type:'Feature',
+      geometry:{type:'LineString',coordinates:arcPts(a.from,a.to)},
+      properties:{id:i,season:a.season}
     }))
-  };
-}
+  }});
 
-// ──────────────────────────────────────────────
-// TABS
-// ──────────────────────────────────────────────
-function setTab(name) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('header nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  const btns = document.querySelectorAll('header nav button');
-  const tabMap = {layers:0, mca:1, sighting:2, recent:3, about:4};
-  if (tabMap[name] !== undefined) btns[tabMap[name]].classList.add('active');
-}
+  // Glow underneath both seasons
+  map.addLayer({id:'arcs-glow',type:'line',source:'arcs-src',
+    paint:{
+      'line-color':['match',['get','season'],'spring','#7aaebb','#c49a52'],
+      'line-width':3,'line-opacity':.06,'line-blur':3
+    },
+    layout:{'line-cap':'round','line-join':'round'}
+  });
 
-// ──────────────────────────────────────────────
-// LAYER TOGGLES
-// ──────────────────────────────────────────────
-function toggleLayer(layerId, visible) {
-  if (!map.getLayer(layerId)) return;
-  map.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
-}
+  // Fall first (underneath) — amber, southbound
+  map.addLayer({id:'arcs-fall',type:'line',source:'arcs-src',
+    filter:['==',['get','season'],'fall'],
+    paint:{'line-color':'#c49a52','line-width':1.2,'line-opacity':.6,'line-dasharray':[0,4,3]},
+    layout:{'line-cap':'round','line-join':'round'}
+  });
 
-// ──────────────────────────────────────────────
-// MCA SLIDERS
-// ──────────────────────────────────────────────
-const mcaWeights = { food: 0.35, mang: 0.25, ship: 0.20, sst: 0.20 };
+  // Spring on top — blue, northbound
+  map.addLayer({id:'arcs-spring',type:'line',source:'arcs-src',
+    filter:['==',['get','season'],'spring'],
+    paint:{'line-color':'#5a9aaa','line-width':1,'line-opacity':.65,'line-dasharray':[0,4,3]},
+    layout:{'line-cap':'round','line-join':'round'}
+  });
 
-function updateMCA(key, val) {
-  mcaWeights[key] = parseFloat(val);
-  document.getElementById('val-' + key).textContent = parseFloat(val).toFixed(2);
-  recalcScore();
-}
+  // Thinner arc lines
+  // Animate dash on both layers
+  let step=0;
+  const seq=[[0,4,3],[0.5,4,2.5],[1,4,2],[1.5,4,1.5],[2,4,1],[2.5,4,0.5],[3,4,0],[0,3,1,3],[0,3.5,1,2.5]];
+  (function tick(){
+    step=(step+1)%seq.length;
+    if(map.getLayer('arcs-spring')) map.setPaintProperty('arcs-spring','line-dasharray',seq[step]);
+    if(map.getLayer('arcs-fall'))   map.setPaintProperty('arcs-fall',  'line-dasharray',seq[step]);
+    setTimeout(tick,120);
+  })();
 
-function recalcScore() {
-  // Simple demo formula:
-  // Score = food*0.8 + mang*0.6 - ship*0.5 + sst*0.7 (normalized attractor values)
-  // In production, this query runs against PostGIS on the server
-  const raw = mcaWeights.food * 0.8 + mcaWeights.mang * 0.6
-              - mcaWeights.ship * 0.5 + mcaWeights.sst * 0.7;
-  const total = mcaWeights.food + mcaWeights.mang + mcaWeights.ship + mcaWeights.sst;
-  const normalised = Math.min(1, Math.max(0, raw / Math.max(total, 0.01)));
-  document.getElementById('mca-score').textContent = normalised.toFixed(2);
-}
+  /* 4. Flying bird silhouettes — smooth interval-based movement */
+  function buildPath(season){
+    const pts=[];
+    MIGRATION_ARCS.filter(a=>a.season===season).forEach(a=>{
+      arcPts(a.from,a.to).forEach((p,i)=>{ if(i>0||pts.length===0) pts.push(p); });
+    });
+    return pts;
+  }
+  const springPath=buildPath('spring');
+  const fallPath  =buildPath('fall');
 
-function showMCATip() {
-  showToast('In the full version, this reruns the PostGIS MCA query and updates the heatmap.');
-}
-
-// ──────────────────────────────────────────────
-// CLICK-TO-LOG MODE
-// ──────────────────────────────────────────────
-function enableClickMode() {
-  clickMode = true;
-  document.getElementById('click-hint').style.display = 'block';
-  map.getCanvas().style.cursor = 'crosshair';
-}
-function disableClickMode() {
-  clickMode = false;
-  document.getElementById('click-hint').style.display = 'none';
-  map.getCanvas().style.cursor = '';
-}
-
-// ──────────────────────────────────────────────
-// SUBMIT SIGHTING
-// ──────────────────────────────────────────────
-function submitSighting() {
-  const species = document.getElementById('f-species').value;
-  const lat = parseFloat(document.getElementById('f-lat').value);
-  const lng = parseFloat(document.getElementById('f-lng').value);
-  const count = parseInt(document.getElementById('f-count').value) || 1;
-  const notes = document.getElementById('f-notes').value;
-  const user = document.getElementById('f-name').value || 'Anonymous';
-  const dt = document.getElementById('f-datetime').value;
-
-  if (!species) { showToast('Please select a species.'); return; }
-  if (isNaN(lat) || isNaN(lng)) { showToast('Please set a location on the map.'); return; }
-
-  const record = {
-    lat, lng, species: species === 'cct' ? 'Chinese Crested Tern' :
-                        species === 'gct' ? 'Greater Crested Tern' : 'Unknown tern',
-    user, count,
-    date: dt ? dt.split('T')[0] : new Date().toISOString().split('T')[0],
-    emoji: '🐦'
-  };
-
-  sightings.unshift(record);
-
-  // Update map layer
-  if (map.getSource('sightings-src')) {
-    map.getSource('sightings-src').setData(sightingsToGeoJSON());
+  function makeBird(flipX){
+    const el=document.createElement('div');
+    el.style.cssText=`width:52px;height:28px;background:url("bird.png") no-repeat center/contain;pointer-events:none;will-change:transform;${flipX?'transform:scaleX(-1)':''}`;
+    return el;
   }
 
-  populateSightingsList();
+  const springEl=makeBird(false);
+  const fallEl  =makeBird(true);
+  const springMarker=new mapboxgl.Marker({element:springEl,anchor:'center'}).setLngLat(springPath[0]).addTo(map);
+  const fallMarker  =new mapboxgl.Marker({element:fallEl,  anchor:'center'}).setLngLat(fallPath[Math.floor(fallPath.length/2)]).addTo(map);
 
-  // Fly to submission
-  map.flyTo({ center: [lng, lat], zoom: 7, duration: 1500 });
+  // Move birds step-by-step on a fixed interval (no RAF flicker)
+  let si=0, fi=Math.floor(fallPath.length/2);
+  const STEP_MS=60;
 
-  // Reset form
-  ['f-species','f-lat','f-lng','f-count','f-notes','f-name','f-datetime'].forEach(id => {
-    document.getElementById(id).value = '';
+  setInterval(()=>{
+    si=(si+1)%springPath.length;
+    const sp=springPath[si], sn=springPath[(si+1)%springPath.length];
+    springMarker.setLngLat(sp);
+    // full angle toward next point — bird image faces right (0°), so angle is direct
+    const sa=Math.atan2(sn[1]-sp[1], sn[0]-sp[0])*180/Math.PI;
+    springEl.style.transform=`rotate(${sa}deg)`;
+  },STEP_MS);
+
+  setInterval(()=>{
+    fi=(fi+1)%fallPath.length;
+    const fp=fallPath[fi], fn=fallPath[(fi+1)%fallPath.length];
+    fallMarker.setLngLat(fp);
+    const fa=Math.atan2(fn[1]-fp[1], fn[0]-fp[0])*180/Math.PI;
+    // fall bird flies opposite direction, flip horizontally then rotate
+    fallEl.style.transform=`scaleX(-1) rotate(${-fa}deg)`;
+  },STEP_MS);
+
+  /* 3. Popup on community sighting dots */
+  map.on('click','sightings',e=>{
+    if(pinMode) return;
+    const p=e.features[0].properties;
+    new mapboxgl.Popup({closeButton:false,offset:12})
+      .setLngLat(e.features[0].geometry.coordinates.slice())
+      .setHTML(`<div class="popup-title">${p.species}</div><div class="popup-body">×${p.count} · ${p.user}<br>${p.date}</div>`)
+      .addTo(map);
   });
+  map.on('mouseenter','sightings',()=>{if(!pinMode) map.getCanvas().style.cursor='pointer'});
+  map.on('mouseleave','sightings',()=>{map.getCanvas().style.cursor=''});
+});
 
-  showToast('✓ Sighting logged! Thank you for contributing.');
-  setTab('recent');
-
-  // ── TO SAVE REAL DATA, uncomment and configure Supabase: ──
-  // const SUPABASE_URL = 'https://YOUR-PROJECT.supabase.co';
-  // const SUPABASE_KEY = 'YOUR-ANON-KEY';
-  // fetch(`${SUPABASE_URL}/rest/v1/tern_sightings`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'apikey': SUPABASE_KEY,
-  //     'Authorization': `Bearer ${SUPABASE_KEY}`,
-  //     'Content-Type': 'application/json'
-  //   },
-  //   body: JSON.stringify({ species: record.species, lat, lng, count, notes, submitted_by: user })
-  // });
+/* ── Helpers ── */
+function s2g(){
+  return{type:'FeatureCollection',features:sightings.map(s=>({
+    type:'Feature',
+    geometry:{type:'Point',coordinates:[s.lng,s.lat]},
+    properties:{species:s.species,user:s.user,count:s.count,date:s.date}
+  }))};
 }
 
-// ──────────────────────────────────────────────
-// RECENT SIGHTINGS LIST
-// ──────────────────────────────────────────────
-function populateSightingsList() {
-  const el = document.getElementById('sighting-list');
-  el.innerHTML = sightings.slice(0, 10).map(s => `
-    <div class="sighting-item">
-      <div class="sighting-icon">${s.emoji}</div>
-      <div class="sighting-meta">
-        <div class="sp">${s.species} ×${s.count}</div>
-        <div class="loc">${s.user} · ${s.date} · ${s.lat.toFixed(2)}, ${s.lng.toFixed(2)}</div>
+function pulse(lng,lat){
+  if(pinMarkerEl){pinMarkerEl.remove();pinMarkerEl=null;}
+  const el=document.createElement('div');
+  el.style.cssText='width:20px;height:20px;border-radius:50%;background:rgba(90,143,158,0.35);border:2px solid #5a8f9e;animation:pp .8s ease-out forwards';
+  if(!document.getElementById('ppStyle')){
+    const s=document.createElement('style');s.id='ppStyle';
+    s.textContent='@keyframes pp{0%{transform:scale(.5);opacity:1}100%{transform:scale(2.5);opacity:0}}';
+    document.head.appendChild(s);
+  }
+  pinMarkerEl=new mapboxgl.Marker({element:el,anchor:'center'}).setLngLat([lng,lat]).addTo(map);
+  setTimeout(()=>{if(pinMarkerEl){pinMarkerEl.remove();pinMarkerEl=null;}},900);
+}
+
+function toggleLayer(id,vis){
+  if(map&&map.getLayer(id)) map.setLayoutProperty(id,'visibility',vis?'visible':'none');
+}
+
+function togglePin(){
+  pinMode=!pinMode;
+  document.body.classList.toggle('pin-mode',pinMode);
+  const btn=document.getElementById('pin-btn');
+  btn.classList.toggle('active',pinMode);
+  btn.textContent=pinMode?'✓ Now click the map':'📍 Click map to pin location';
+  if(pinMode) showToast('Click anywhere on the map to set your sighting location.');
+}
+function disablePin(){
+  pinMode=false;
+  document.body.classList.remove('pin-mode');
+  const btn=document.getElementById('pin-btn');
+  btn.classList.remove('active');
+  btn.textContent='📍 Click map to pin location';
+}
+
+function renderList(){
+  document.getElementById('sighting-list').innerHTML=sightings.slice(0,6).map(s=>`
+    <div class="s-item">
+      <div class="s-ico">🐦</div>
+      <div>
+        <div class="s-sp">${s.species} ×${s.count}</div>
+        <div class="s-loc">${s.user} · ${s.date} · ${s.lat.toFixed(2)}°, ${s.lng.toFixed(2)}°</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
+}
+renderList();
+
+function submitSighting(){
+  const sp=document.getElementById('f-species').value;
+  const lat=parseFloat(document.getElementById('f-lat').value);
+  const lng=parseFloat(document.getElementById('f-lng').value);
+  const count=parseInt(document.getElementById('f-count').value)||1;
+  const user=document.getElementById('f-name').value||'Anonymous';
+  const dt=document.getElementById('f-datetime').value;
+  if(!sp){showToast('Please select a species.');return;}
+  if(isNaN(lat)||isNaN(lng)){showToast('Please pin a location on the map first.');return;}
+  sightings.unshift({lat,lng,count,user,
+    species:sp==='cct'?'Chinese Crested Tern':sp==='gct'?'Greater Crested Tern':'Unknown tern',
+    date:dt?dt.split('T')[0]:new Date().toISOString().split('T')[0]
+  });
+  if(map.getSource('sightings-src')) map.getSource('sightings-src').setData(s2g());
+  renderList();
+  map.flyTo({center:[lng,lat],zoom:6.5,duration:1800});
+  disablePin();
+  ['f-species','f-lat','f-lng','f-count','f-notes','f-name'].forEach(id=>{document.getElementById(id).value='';});
+  showToast('Sighting recorded — map updated. Thank you.');
 }
 
-// ──────────────────────────────────────────────
-// MAP STYLE SWITCHER
-// ──────────────────────────────────────────────
-function setStyle(name) {
-  const styles = {
-    dark: 'mapbox://styles/emmahu20060131/cmodwrtal000t01sl8df9h15b',
-    satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
-    light: 'mapbox://styles/mapbox/light-v11'
-  };
-  map.setStyle(styles[name]);
-  map.once('style.load', addLayers);
-  showToast('Map style changed.');
-}
-
-// ──────────────────────────────────────────────
-// TOAST
-// ──────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ── Set default datetime ──
-document.getElementById('f-datetime').value =
-  new Date().toISOString().slice(0,16);
-
-// ── Start ──
-initMap();
-</script>
+document.getElementById('f-datetime').value=new Date().toISOString().slice(0,16);</script>
 </body>
 </html>
