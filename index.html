@@ -6,7 +6,7 @@
 <title>SkyWatch — Floating Habitat Platform Finder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&family=EB+Garamond:ital@0;1&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet"/>
 <!-- Mapbox CSS only in head; JS loaded at bottom of body -->
 
@@ -22,18 +22,19 @@
   --r:10px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;color:var(--text)}
+html{width:100%;font-family:'DM Sans',sans-serif;color:var(--text);scroll-behavior:smooth}
+body{width:100%;font-family:'DM Sans',sans-serif;color:var(--text)}
 
 /* ── MAP ── */
-#map{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+#map-section{position:relative;width:100%;height:100vh}
+#map{position:absolute;inset:0;z-index:0;width:100%;height:100%}
 body.pin-mode #map{cursor:crosshair}
 
-/* ── STRIPE ── */
-.stripe{position:fixed;top:0;left:0;right:0;height:3px;z-index:200;background:linear-gradient(to right,#9dc3cc,#bbced2,#dbddd7,#ebe4da,#edd7c8,#f6cbbd)}
+/* ── STRIPE — removed, banner goes flush to top ── */
 
-/* ── BANNER ── */
+/* ── BANNER — flush to top ── */
 #alert-banner{
-  position:fixed;top:3px;left:0;right:0;z-index:190;
+  position:fixed;top:0;left:0;right:0;z-index:190;
   background:linear-gradient(to right,rgba(45,90,101,0.93),rgba(90,143,158,0.88));
   backdrop-filter:blur(10px);
   padding:9px 20px 9px 24px;
@@ -45,24 +46,27 @@ body.pin-mode #map{cursor:crosshair}
 .alert-copy em{font-family:'Cormorant Garamond',serif;font-style:italic}
 .alert-goal{flex-shrink:0;background:rgba(157,195,204,0.22);border:1px solid rgba(157,195,204,0.35);border-radius:20px;padding:4px 14px;font-size:11px;color:var(--sky);white-space:nowrap;letter-spacing:0.04em}
 
-/* ── LOGO ── */
-#logo{position:fixed;top:52px;left:20px;z-index:180}
+/* ── LOGO — below banner ── */
+#logo{position:fixed;top:48px;left:20px;z-index:180}
 .logo-box{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;backdrop-filter:blur(10px)}
 .logo-word{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--deep);letter-spacing:0.04em;line-height:1}
 .logo-word em{font-style:italic;color:var(--accent)}
 .logo-tag{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px}
 
-/* ── DOCK ── */
-#dock{position:fixed;bottom:28px;left:20px;z-index:180;display:flex;flex-direction:column;gap:8px}
-.dock-btn{width:44px;height:44px;border-radius:50%;background:var(--panel);border:1px solid var(--border);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative}
-.dock-btn:hover{background:rgba(157,195,204,0.3);border-color:var(--sky);transform:scale(1.08)}
-.dock-btn.active{background:rgba(157,195,204,0.4);border-color:var(--accent)}
-.dock-btn svg{width:20px;height:20px;stroke:var(--deep);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.dock-tooltip{position:absolute;left:52px;top:50%;transform:translateY(-50%);background:var(--deep);color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s}
+/* ── DOCK — left side, below logo ── */
+#dock{
+  position:fixed;left:20px;top:210px;z-index:180;
+  display:flex;flex-direction:column;gap:10px;
+}
+.dock-btn{width:44px;height:44px;border-radius:50%;background:rgba(14,18,22,0.7);border:1px solid rgba(157,195,204,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative}
+.dock-btn:hover{background:rgba(157,195,204,0.18);border-color:var(--sky);transform:scale(1.08)}
+.dock-btn.active{background:rgba(157,195,204,0.28);border-color:var(--accent)}
+.dock-btn svg{width:20px;height:20px;stroke:rgba(200,215,218,0.75);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.dock-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:rgba(8,14,17,0.97);color:rgba(243,236,224,0.9);font-size:11px;padding:5px 10px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;border:0.5px solid rgba(157,195,204,0.2)}
 .dock-btn:hover .dock-tooltip{opacity:1}
 
 /* ── RIGHT PANEL ── */
-#panel-sighting{position:fixed;top:52px;right:20px;bottom:28px;width:300px;z-index:180;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden}
+#panel-sighting{position:fixed;top:48px;right:20px;bottom:196px;width:260px;z-index:180;background:var(--panel);border:1px solid var(--border);border-radius:var(--r);backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden}
 .panel-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
 .panel-header-stripe{height:2px;border-radius:1px;margin-bottom:12px;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.55}
 .panel-eyebrow{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
@@ -173,8 +177,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 #migration-legend{
   position:fixed;bottom:44px;right:20px;z-index:180;
   background:var(--panel);border:1px solid var(--border);
-  border-radius:var(--r);padding:12px 14px;
-  backdrop-filter:blur(10px);min-width:210px;
+  border-radius:var(--r);padding:10px 12px;
+  backdrop-filter:blur(10px);width:260px;
 }
 .ml-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;gap:7px}
 .ml-title::before{content:'';width:16px;height:2px;border-radius:1px;background:linear-gradient(to right,var(--sky),var(--shell));opacity:0.6;flex-shrink:0}
@@ -186,8 +190,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 /* CC */
 #toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:linear-gradient(135deg,rgba(157,195,204,0.94),rgba(122,174,187,0.92));color:var(--deep);padding:10px 24px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:all 0.3s;pointer-events:none;backdrop-filter:blur(8px)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#cc{position:fixed;bottom:8px;right:20px;z-index:180;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);opacity:0.75}
-#cc img{height:14px;opacity:0.6}
+#cc{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:180;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);opacity:0.85}
+#cc img{height:18px;opacity:0.75}
 #cc a{color:var(--accent);text-decoration:none}
 
 /* mapbox popup */
@@ -195,24 +199,366 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 .mapboxgl-popup-tip{display:none!important}
 .popup-title{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:#2d5a65;margin-bottom:3px}
 .popup-body{color:#8a7a6a;font-size:12px;line-height:1.6}
-.mapboxgl-ctrl-bottom-right{bottom:28px!important}
-</style>
-</head>
-<body>
+/* Mapbox attribution — bottom-right, small, clear of panels */
+.mapboxgl-ctrl-bottom-left{display:none!important}
+.mapboxgl-ctrl-bottom-right{bottom:8px!important;right:8px!important}
+.mapboxgl-ctrl-logo{display:none!important}
 
-<div class="stripe"></div>
+@keyframes gn-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.6)}}
+
+@keyframes gn-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.6)}}
+
+/* ══════════════════════════════════════════════════════
+   FAKE LIVE STREAM — "Island No.5 Nest Cam"
+══════════════════════════════════════════════════════ */
+#live-cam{
+  position:fixed;left:20px;bottom:8px;z-index:185;
+  width:300px;
+  background:rgba(20,24,26,0.92);
+  border:1px solid rgba(196,154,82,0.3);
+  border-radius:var(--r);
+  backdrop-filter:blur(12px);
+  overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+  transition:transform 0.35s cubic-bezier(.22,1,.36,1),opacity 0.3s;
+}
+#live-cam.collapsed{transform:translateY(calc(100% - 38px))}
+
+/* header bar */
+.lc-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 11px;cursor:pointer;
+  background:rgba(0,0,0,0.35);
+  border-bottom:1px solid rgba(196,154,82,0.18);
+}
+.lc-live{display:flex;align-items:center;gap:7px}
+.lc-live-badge{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(232,99,79,0.9);border-radius:3px;
+  padding:2px 7px;
+}
+.lc-live-badge .dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:gn-pulse 1.2s infinite}
+.lc-live-badge span{font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.1em;color:#fff}
+.lc-cam-name{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(243,236,224,0.55);letter-spacing:0.04em}
+.lc-toggle{font-size:13px;color:rgba(243,236,224,0.45);transition:transform 0.3s;line-height:1}
+#live-cam.collapsed .lc-toggle{transform:rotate(180deg)}
+
+/* the "camera feed" */
+.lc-feed{
+  position:relative;width:100%;height:168px;overflow:hidden;
+  background:#0b1418;
+}
+.lc-feed-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;
+  /* WASHED / WATERCOLOUR ILLUSTRATION TREATMENT */
+  filter:grayscale(0.35) sepia(0.18) brightness(1.05) contrast(0.9) saturate(0.75);
+  opacity:0;transition:opacity 1.4s ease;
+  transform:scale(1.06);
+  animation:lc-drift 26s ease-in-out infinite alternate;
+}
+.lc-feed-img.show{opacity:0.92}
+video.lc-feed-img{animation:none;transform:scale(1.02)}
+@keyframes lc-drift{
+  0%{transform:scale(1.06) translate(0,0)}
+  100%{transform:scale(1.12) translate(-2%,-1.5%)}
+}
+/* paper-wash colour overlay so the photo reads as illustration, not photo */
+.lc-feed::before{
+  content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse 75% 65% at 50% 42%,rgba(157,195,204,0.0) 30%,rgba(20,40,48,0.55) 100%),
+    linear-gradient(160deg,rgba(157,195,204,0.18),rgba(246,203,189,0.1) 55%,rgba(122,158,106,0.12));
+  mix-blend-mode:soft-light;
+}
+.lc-feed::after{
+  content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,rgba(11,20,24,0.45) 0%,transparent 22%,transparent 72%,rgba(11,20,24,0.65) 100%);
+}
+/* paper grain */
+.lc-grain{
+  position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+/* subtle scanline so it reads "camera feed" */
+.lc-scan{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.05) 3px,rgba(0,0,0,0.05) 4px);
+}
+/* flying tern overlay — gives the "something is alive" feel */
+.lc-tern{
+  position:absolute;z-index:6;pointer-events:none;
+  width:30px;opacity:0;
+  animation:lc-fly 14s linear infinite;
+}
+.lc-tern svg{width:100%;fill:rgba(243,236,224,0.55)}
+.lc-tern.t2{width:18px;animation-duration:19s;animation-delay:-6s;top:30%!important}
+@keyframes lc-fly{
+  0%{opacity:0;left:-12%;top:55%;transform:rotate(4deg) scaleX(1)}
+  8%{opacity:0.7}
+  50%{top:38%;transform:rotate(-3deg) scaleX(1)}
+  92%{opacity:0.5}
+  100%{opacity:0;left:108%;top:48%;transform:rotate(2deg) scaleX(1)}
+}
+/* on-feed overlays (timestamp / rec) */
+.lc-feed-overlay{position:absolute;z-index:7;font-family:'DM Mono','DM Sans',monospace;pointer-events:none}
+.lc-rec{top:9px;right:10px;display:flex;align-items:center;gap:5px;font-size:9px;letter-spacing:0.1em;color:rgba(243,236,224,0.7)}
+.lc-rec .rdot{width:6px;height:6px;border-radius:50%;background:#e8634f;animation:gn-pulse 1.3s infinite}
+.lc-ts{bottom:8px;left:10px;font-size:9px;letter-spacing:0.06em;color:rgba(243,236,224,0.65);text-shadow:0 1px 3px rgba(0,0,0,0.6)}
+.lc-loc{bottom:8px;right:10px;font-size:9px;letter-spacing:0.06em;color:rgba(157,195,204,0.85);text-shadow:0 1px 3px rgba(0,0,0,0.6)}
+
+/* footer: viewers + species + watch link */
+.lc-footer{padding:9px 11px 10px;background:rgba(0,0,0,0.25)}
+.lc-footer-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.lc-viewers{display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(243,236,224,0.6)}
+.lc-viewers .eye{width:11px;height:11px;flex-shrink:0}
+.lc-viewers strong{color:#f3ece0;font-weight:600}
+.lc-species{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:#9dc3cc}
+.lc-caption{font-family:'DM Sans',sans-serif;font-size:10px;color:rgba(243,236,224,0.42);line-height:1.55;margin-bottom:9px}
+.lc-actions{display:flex;gap:6px}
+.lc-watch{
+  flex:1;text-align:center;text-decoration:none;
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;
+  padding:7px;border-radius:7px;
+  background:linear-gradient(135deg,rgba(196,154,82,0.85),rgba(176,112,64,0.85));
+  color:#fff;letter-spacing:0.03em;transition:filter 0.2s;
+}
+.lc-watch:hover{filter:brightness(1.1)}
+.lc-cams{
+  display:flex;gap:3px;
+}
+.lc-cam-dot{
+  width:24px;height:24px;border-radius:6px;cursor:pointer;
+  border:1px solid rgba(157,195,204,0.3);
+  background:rgba(157,195,204,0.08);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;font-size:9px;color:rgba(243,236,224,0.55);
+  transition:all 0.18s;
+}
+.lc-cam-dot:hover{background:rgba(157,195,204,0.2)}
+.lc-cam-dot.active{background:rgba(157,195,204,0.32);border-color:var(--accent);color:#f3ece0}
+
+@media(max-width:560px){
+  #live-cam{width:calc(100vw - 40px);left:20px;right:20px;bottom:8px}
+}
+
+/* ── SCROLL DOWN HINT ── */
+#go-down{
+  position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+  z-index:9990; /* above Mapbox controls which are z-index ~2 */
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  cursor:pointer;border:none;background:none;padding:8px 18px;
+  animation:gd-in 1s ease 2.2s both;
+  transition:opacity 0.35s, visibility 0.35s;
+}
+/* hide when scrolled past map — managed by scroll listener, not .hidden class */
+#go-down.map-gone{opacity:0;pointer-events:none;visibility:hidden}
+@keyframes gd-in{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.gd-label{
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.18em;
+  text-transform:uppercase;color:rgba(243,236,224,0.5);
+  text-shadow:0 1px 5px rgba(0,0,0,0.7);white-space:nowrap;
+}
+.gd-ring{
+  width:36px;height:36px;border-radius:50%;
+  border:1px solid rgba(243,236,224,0.22);
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(11,20,24,0.45);backdrop-filter:blur(8px);
+  box-shadow:0 2px 16px rgba(0,0,0,0.35);
+  transition:border-color 0.2s,background 0.2s;
+  animation:gd-bob 2s ease-in-out infinite;
+}
+#go-down:hover .gd-ring{
+  border-color:rgba(196,154,82,0.6);
+  background:rgba(45,90,101,0.55);
+}
+@keyframes gd-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.gd-arrow{
+  width:10px;height:10px;
+  border-right:1.5px solid rgba(243,236,224,0.65);
+  border-bottom:1.5px solid rgba(243,236,224,0.65);
+  transform:rotate(45deg) translate(-2px,-2px);
+}
+
+/* ── ILLUSTRATION SECTION ── */
+#illustration-section{
+  position:relative;
+  background:#0b0f11;
+  min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:90px 32px 72px;
+  overflow:hidden;
+}
+.il-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.il-blob{position:absolute;border-radius:50%;filter:blur(100px)}
+.il-b1{width:650px;height:420px;top:-8%;left:-10%;
+  background:radial-gradient(ellipse,rgba(157,195,204,0.09),transparent 70%)}
+.il-b2{width:550px;height:380px;bottom:-5%;right:-8%;
+  background:radial-gradient(ellipse,rgba(196,154,82,0.06),transparent 70%)}
+
+.il-header{position:relative;z-index:2;text-align:center;margin-bottom:44px}
+.il-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.22em;
+  text-transform:uppercase;color:rgba(157,195,204,0.55);margin-bottom:10px}
+.il-title{font-family:'Cormorant Garamond',serif;font-size:clamp(1.7rem,3.5vw,2.8rem);
+  font-weight:300;color:rgba(243,236,224,0.9);line-height:1.1;margin-bottom:10px}
+.il-title em{font-style:italic;color:#9dc3cc}
+.il-subtitle{font-family:'DM Sans',sans-serif;font-size:12px;
+  color:rgba(200,215,218,0.4);letter-spacing:0.04em;line-height:1.7}
+.il-sep{display:flex;align-items:center;gap:14px;margin-top:14px;justify-content:center;opacity:0.3}
+.il-sep::before,.il-sep::after{content:'';width:50px;height:0.5px;
+  background:linear-gradient(to right,transparent,rgba(157,195,204,1),transparent)}
+.il-sep span{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.16em;
+  color:rgba(157,195,204,1);text-transform:uppercase}
+
+/* Stage: the painting + hotspots */
+.il-stage{
+  position:relative;z-index:2;width:100%;max-width:960px;
+  border-radius:3px;overflow:visible;
+}
+.il-stage > img{
+  display:block;width:100%;height:auto;border-radius:3px;
+  filter:saturate(0.9) contrast(0.96);
+  box-shadow:0 28px 90px rgba(0,0,0,0.65);
+  transition:filter 0.5s ease;
+}
+.il-stage.any-active > img{filter:saturate(0.65) contrast(0.85) brightness(0.75)}
+
+/* Hotspot dot + ring */
+.hs{
+  position:absolute;width:32px;height:32px;
+  transform:translate(-50%,-50%);cursor:default;z-index:10;
+}
+.hs-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid rgba(196,154,82,0.75);
+  animation:ring-pulse 2.4s ease-in-out infinite;
+}
+.hs-ring2{
+  position:absolute;inset:5px;border-radius:50%;
+  border:1px solid rgba(196,154,82,0.35);
+  animation:ring-pulse 2.4s ease-in-out infinite 0.4s;
+}
+@keyframes ring-pulse{0%,100%{transform:scale(1);opacity:0.9}60%{transform:scale(1.4);opacity:0}}
+.hs-dot{
+  position:absolute;width:8px;height:8px;border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(196,154,82,0.95);
+  box-shadow:0 0 10px rgba(196,154,82,0.5),0 0 24px rgba(196,154,82,0.2);
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.hs:hover .hs-dot,.hs.active .hs-dot{
+  transform:translate(-50%,-50%) scale(1.6);
+  box-shadow:0 0 16px rgba(196,154,82,0.8),0 0 36px rgba(196,154,82,0.35);
+}
+
+/* Tooltip card */
+.hs-tip{
+  position:absolute;width:210px;
+  pointer-events:none;
+  opacity:0;transform:scale(0.95);
+  transition:opacity 0.2s,transform 0.22s;
+  z-index:30;
+}
+.hs.active .hs-tip{opacity:1;transform:scale(1)}
+
+/* direction helpers */
+.tip-right{left:calc(100% + 16px);top:50%;margin-top:-70px}
+.tip-left{right:calc(100% + 16px);top:50%;margin-top:-70px}
+.tip-below{top:calc(100% + 16px);left:50%;transform:translateX(-50%) scale(0.95)}
+.hs.active .tip-below{transform:translateX(-50%) scale(1)}
+.tip-above{bottom:calc(100% + 16px);left:50%;transform:translateX(-50%) scale(0.95)}
+.hs.active .tip-above{transform:translateX(-50%) scale(1)}
+
+.hs-tip-box{
+  background:rgba(8,14,17,0.97);
+  border:0.5px solid rgba(157,195,204,0.2);
+  border-radius:10px;
+  padding:14px 15px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.55);
+}
+.tip-tag{
+  font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.14em;
+  text-transform:uppercase;margin-bottom:7px;display:inline-block;
+  padding:2px 8px;border-radius:3px;
+}
+.tag-feature{background:rgba(196,154,82,0.15);color:rgba(196,154,82,0.9);
+  border:0.5px solid rgba(196,154,82,0.3)}
+.tag-species-cr{background:rgba(176,112,64,0.18);color:#f0c878;
+  border:0.5px solid rgba(196,154,82,0.35)}
+.tag-species-lc{background:rgba(110,150,95,0.18);color:#a8d48a;
+  border:0.5px solid rgba(110,150,95,0.3)}
+.tip-name{font-family:'Cormorant Garamond',serif;font-size:16px;
+  color:rgba(243,236,224,0.95);line-height:1.2;margin-bottom:3px}
+.tip-name em{font-style:italic;color:#9dc3cc}
+.tip-sci{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;
+  color:rgba(200,215,218,0.4);margin-bottom:8px}
+.tip-desc{font-family:'DM Sans',sans-serif;font-size:11px;
+  color:rgba(200,215,218,0.68);line-height:1.65}
+.tip-desc strong{color:rgba(243,236,224,0.88);font-weight:500}
+
+/* caption below painting */
+.il-caption{
+  position:relative;z-index:2;
+  margin-top:28px;text-align:center;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:13px;color:rgba(200,215,218,0.3);line-height:1.7;
+  max-width:700px;
+}
+/* Chinese annotation — small muted text after English primary */
+.zh{
+  font-size:0.8em;opacity:0.45;letter-spacing:0.06em;
+  font-family:'Noto Serif SC','DM Sans',sans-serif;
+  font-weight:400;font-style:normal;
+  margin-left:0.35em;
+}
+/* Block-level zh annotation on its own line */
+.zh-block{
+  display:block;font-size:0.78em;opacity:0.38;letter-spacing:0.08em;
+  font-family:'Noto Serif SC','DM Sans',sans-serif;
+  font-weight:400;margin-top:0.15em;font-style:normal;
+}
+</style>
+<body>
 
 
 <!-- ══ FULL-SCREEN MAP ══ -->
+<div id="map-section">
 <div id="map"></div>
+</div>
+
+
+<!-- ══ FAKE LIVE STREAM — Island No.5 Nest Cam ══ -->
+<div id="live-cam">
+  <div class="lc-header" onclick="document.getElementById('live-cam').classList.toggle('collapsed')">
+    <div class="lc-live">
+      <div class="lc-live-badge"><span class="dot"></span><span>NEST CAM LIVE</span></div>
+      <span class="lc-cam-name" id="lc-cam-name">CAM&nbsp;01 · Nest Ledge</span>
+    </div>
+    <span class="lc-toggle">▾</span>
+  </div>
+  <div class="lc-feed" id="lc-feed">
+    <video class="lc-feed-img show" id="lc-feed-img" src="nest-cam.mp4"
+           autoplay loop muted playsinline preload="auto"
+           poster="mythical-bird-scene-02.png"
+           onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(160deg,#1a3640,#0b1418)'"></video>
+    <!-- flying terns give the 'something is alive' feel -->
+    <div class="lc-tern"><svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 Q20,8 38,10 Q55,12 70,18 Q55,22 38,18 Q20,14 5,18z"/><path d="M38,10 Q45,3 55,6 Q48,10 38,10z"/></svg></div>
+    <div class="lc-tern t2"><svg viewBox="0 0 80 30" xmlns="http://www.w3.org/2000/svg"><path d="M5,18 Q20,8 38,10 Q55,12 70,18 Q55,22 38,18 Q20,14 5,18z"/><path d="M38,10 Q45,3 55,6 Q48,10 38,10z"/></svg></div>
+    <div class="lc-grain"></div>
+    <div class="lc-scan"></div>
+    <div class="lc-feed-overlay lc-rec"><span class="rdot"></span>REC</div>
+    <div class="lc-feed-overlay lc-ts" id="lc-ts">--:--:--</div>
+    <div class="lc-feed-overlay lc-loc">30.5°N · 122.6°E</div>
+  </div>
+</div>
 
 <!-- ══ BANNER ══ -->
 <div id="alert-banner">
   <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0">
-    <span class="alert-pill">CR · ~50 left</span>
-    <span class="alert-copy"><strong>Why this platform exists:</strong> The <em>Chinese Crested Tern</em> is critically endangered — its rocky-islet nesting sites are lost to coastal development. SkyWatch uses GIS to find where <strong>artificial floating platforms</strong> can replace that habitat.</span>
+    <span class="alert-pill">CR · ~200 left</span>
+    <span class="alert-copy"><strong>Why this platform exists:</strong> The <em>Chinese Crested Tern</em> is critically endangered — its rocky-islet nesting sites are lost to coastal development. SkyWatch uses GIS to find where <strong>artificial floating platforms</strong> can replace that habitat. <span class="zh">中华凤头燕鸥极度濒危，SkyWatch 利用 GIS 寻找人工漂浮平台替代栖息地</span></span>
   </div>
-  <span class="alert-goal">Goal: locate floating habitat sites</span>
+  <span class="alert-goal">Goal: locate floating habitat sites <span class="zh">定位漂浮栖息地</span></span>
 </div>
 
 <!-- ══ LOGO ══ -->
@@ -220,34 +566,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
   <div class="logo-box">
     <div class="logo-word">Sky<em>Watch</em></div>
     <div class="logo-tag">Floating habitat · GIS platform</div>
-  </div>
-</div>
-
-<!-- ══ DOCK ══ -->
-<div id="dock">
-  <div class="dock-btn" id="btn-painting" onclick="togglePop('pop-painting')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 17l4-4 4 4 4-5 4 5"/></svg>
-    <span class="dock-tooltip">Watercolour illustration</span>
-  </div>
-  <div class="dock-btn" id="btn-species" onclick="togglePop('pop-species')">
-    <svg viewBox="0 0 24 24"><path d="M2 12c0 0 3-4 7-4c2 0 3 1 5 1c2 0 4-2 6-1c-1 2-3 4-5 4c-2 0-3-1-5-1c-2 0-4 2-4 2z"/><path d="M9 8c0-2 1-4 3-4s3 2 3 4"/></svg>
-    <span class="dock-tooltip">Species profile</span>
-  </div>
-  <div class="dock-btn" id="btn-mca" onclick="togglePop('pop-mca')">
-    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2.5" fill="white" stroke-width="1.6"/><circle cx="15" cy="12" r="2.5" fill="white" stroke-width="1.6"/><circle cx="10" cy="18" r="2.5" fill="white" stroke-width="1.6"/></svg>
-    <span class="dock-tooltip">Suitability model (MCA)</span>
-  </div>
-  <div class="dock-btn" id="btn-mangrove" onclick="togglePop('pop-mangrove')">
-    <svg viewBox="0 0 24 24"><path d="M12 2C8 2 5 5 5 9c0 3 2 5 4 6v5h6v-5c2-1 4-3 4-6 0-4-3-7-7-7z"/></svg>
-    <span class="dock-tooltip">Mangrove loss timeline</span>
-  </div>
-  <div class="dock-btn" id="btn-platform" onclick="togglePop('pop-platform')">
-    <svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="4" rx="1"/><path d="M7 10V7M12 10V6M17 10V7"/><path d="M4 14c0 2 1 4 2 4M20 14c0 2-1 4-2 4M12 14v6"/><line x1="8" y1="20" x2="16" y2="20"/></svg>
-    <span class="dock-tooltip">About floating platforms</span>
-  </div>
-  <div class="dock-btn" id="btn-layers" onclick="togglePop('pop-layers')">
-    <svg viewBox="0 0 24 24"><polygon points="12 2 22 8.5 12 15 2 8.5"/><polyline points="2 15.5 12 22 22 15.5"/><polyline points="2 12 12 18.5 22 12"/></svg>
-    <span class="dock-tooltip">Map layers</span>
+    <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(157,195,204,0.2);display:flex;align-items:center;gap:8px">
+      <span style="font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--accent);font-style:italic">The Mythical Bird</span>
+      <span style="font-size:11px;color:var(--muted)">神话之鸟</span>
+    </div>
   </div>
 </div>
 
@@ -255,68 +577,48 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div id="panel-sighting">
   <div class="panel-header">
     <div class="panel-header-stripe"></div>
-    <div class="panel-eyebrow">Citizen science</div>
-    <div class="panel-title">Log a <em>sighting</em></div>
+    <div class="panel-eyebrow">Citizen science <span class="zh">公民科学</span></div>
+    <div class="panel-title">Log a <em>sighting</em> <span class="zh" style="font-size:0.7em">记录目击</span></div>
   </div>
   <div class="panel-body">
     <div class="urgency-note">
-      <strong>Every record matters</strong>
-      Only ~50 Chinese Crested Terns remain. Your sighting feeds directly into the habitat suitability model.
+      <strong>Every record matters <span class="zh">每条记录都至关重要</span></strong>
+      ~200 Chinese Crested Terns remain. Your sighting feeds directly into the habitat suitability model.
+      <span class="zh-block">全球仅约200只存世，您的记录将直接输入栖息地适宜性模型</span>
     </div>
-    <button class="pin-btn" id="pin-btn" onclick="togglePin()">📍 Click map to pin location</button>
-    <div class="form-row"><label>Species</label>
+    <button class="pin-btn" id="pin-btn" onclick="togglePin()">📍 Click map to pin location <span class="zh">点击地图定位</span></button>
+    <div class="form-row"><label>Species <span class="zh">物种</span></label>
       <select id="f-species">
         <option value="">— Select species —</option>
-        <option value="cct">Chinese Crested Tern (T. bernsteini)</option>
-        <option value="gct">Greater Crested Tern (T. bergii)</option>
-        <option value="other">Other / uncertain</option>
+        <option value="cct">Chinese Crested Tern (T. bernsteini) 中华凤头燕鸥</option>
+        <option value="gct">Greater Crested Tern (T. bergii) 大凤头燕鸥</option>
+        <option value="other">Other / uncertain 其他</option>
       </select>
     </div>
-    <div class="form-row"><label>Date &amp; time</label><input type="datetime-local" id="f-datetime"/></div>
+    <div class="form-row"><label>Date &amp; time <span class="zh">日期与时间</span></label><input type="datetime-local" id="f-datetime"/></div>
     <div class="coords-row">
-      <div class="form-row"><label>Lat</label><input type="number" id="f-lat" placeholder="25.12" step="0.0001"/></div>
-      <div class="form-row"><label>Lng</label><input type="number" id="f-lng" placeholder="121.54" step="0.0001"/></div>
+      <div class="form-row"><label>Lat <span class="zh">纬度</span></label><input type="number" id="f-lat" placeholder="25.12" step="0.0001"/></div>
+      <div class="form-row"><label>Lng <span class="zh">经度</span></label><input type="number" id="f-lng" placeholder="121.54" step="0.0001"/></div>
     </div>
-    <div class="form-row"><label>Count</label><input type="number" id="f-count" placeholder="e.g. 3" min="1"/></div>
-    <div class="form-row"><label>Notes</label><textarea id="f-notes" placeholder="Behaviour, habitat, weather…"></textarea></div>
-    <div class="form-row"><label>Your name</label><input type="text" id="f-name" placeholder="e.g. Emma H."/></div>
-    <button class="submit-btn" onclick="submitSighting()">Submit sighting</button>
-    <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">Open data · CC BY 4.0 · Stored in PostGIS</p>
-    <div class="recent-divider">Recent records</div>
+    <div class="form-row"><label>Count <span class="zh">数量</span></label><input type="number" id="f-count" placeholder="e.g. 3" min="1"/></div>
+    <div class="form-row"><label>Notes <span class="zh">备注</span></label><textarea id="f-notes" placeholder="Behaviour, habitat, weather…"></textarea></div>
+    <div class="form-row"><label>Your name <span class="zh">姓名</span></label><input type="text" id="f-name" placeholder="e.g. Yige H."/></div>
+    <button class="submit-btn" onclick="submitSighting()">Submit sighting <span class="zh">提交记录</span></button>
+    <p style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.5">Open data · CC BY 4.0 · Stored in PostGIS <span class="zh">开放数据</span></p>
+    <div class="recent-divider">Recent records <span class="zh">最新记录</span></div>
     <div id="sighting-list"></div>
   </div>
 </div>
 
 <!-- ══ POPOVERS ══ -->
 
-<!-- Painting -->
-<div class="popover" id="pop-painting">
-  <div class="popover-header">
-    <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Illustration</div>
-    <div class="popover-title"><em>Thalasseus bernsteini</em> — watercolour</div>
-    <button class="popover-close" onclick="closePop('pop-painting')">×</button>
-  </div>
-  <div class="popover-body">
-    <div class="painting-img">
-      <img src="painting_cct.jpg" alt="Watercolour of Chinese Crested Terns" onerror="this.parentElement.style.cssText='height:160px;background:linear-gradient(135deg,#9dc3cc,#bbced2,#dbddd7,#edd7c8);border-radius:7px;display:flex;align-items:center;justify-content:center';this.style.display='none'"/>
-    </div>
-    <div class="palette-row">
-      <span style="background:#9dc3cc"></span><span style="background:#bbced2"></span>
-      <span style="background:#dbddd7"></span><span style="background:#c49a52"></span>
-      <span style="background:#7a9e6a"></span><span style="background:#f6cbbd"></span>
-    </div>
-    <p class="painting-caption">Chinese Crested Terns nesting among coastal vegetation. Watercolour on paper.</p>
-    <p style="font-size:11px;color:var(--muted);line-height:1.7;margin-top:10px">The platform's colour palette — from sky-teal to shell-pink — is drawn directly from this painting, connecting the scientific data to the living bird.</p>
-  </div>
-</div>
 
 <!-- Species -->
 <div class="popover" id="pop-species">
   <div class="popover-header">
     <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Species profile</div>
-    <div class="popover-title">The bird we are <em>protecting</em></div>
+    <div class="popover-eyebrow">物种档案 · Species profile</div>
+    <div class="popover-title">我们正在<em>保护</em>的鸟 · The bird we are <em>protecting</em></div>
     <button class="popover-close" onclick="closePop('pop-species')">×</button>
   </div>
   <div class="popover-body">
@@ -325,7 +627,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
       <div style="font-size:10px;color:var(--muted);letter-spacing:0.07em;text-transform:uppercase;margin-top:2px">Chinese Crested Tern</div>
       <div class="cr-pill">CR · Critically Endangered · IUCN</div>
     </div>
-    <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">Each dot = one individual. Approximately <strong style="color:var(--deep)">~50 wild birds</strong> remain.</p>
+    <p style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">Each dot = one individual. Approximately <strong style="color:var(--deep)">~200 wild birds</strong> remain. <span class="zh">约200只野生个体存世</span></p>
     <div class="pop-dots" id="sp-dots"></div>
     <div class="fact-grid">
       <div class="fact"><div class="fact-l">Wingspan</div><div class="fact-v">86–94 cm</div></div>
@@ -343,8 +645,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div class="popover" id="pop-mca">
   <div class="popover-header">
     <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Multi-criteria analysis</div>
-    <div class="popover-title">Habitat <em>suitability</em> model</div>
+    <div class="popover-eyebrow">多准则分析 · Multi-criteria analysis</div>
+    <div class="popover-title">栖息地<em>适宜性</em>模型 · Habitat <em>suitability</em> model</div>
     <button class="popover-close" onclick="closePop('pop-mca')">×</button>
   </div>
   <div class="popover-body">
@@ -376,8 +678,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div class="popover" id="pop-mangrove">
   <div class="popover-header">
     <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Habitat loss</div>
-    <div class="popover-title">Mangrove <em>decline</em> 1996–2020</div>
+    <div class="popover-eyebrow">栖息地丧失 · Habitat loss</div>
+    <div class="popover-title">红树林<em>减少</em>趋势 1996–2020 · Mangrove <em>decline</em></div>
     <button class="popover-close" onclick="closePop('pop-mangrove')">×</button>
   </div>
   <div class="popover-body">
@@ -391,8 +693,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div class="popover" id="pop-platform">
   <div class="popover-header">
     <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Our goal</div>
-    <div class="popover-title">Floating habitat <em>platforms</em></div>
+    <div class="popover-eyebrow">我们的目标 · Our goal</div>
+    <div class="popover-title">漂浮栖息地<em>平台</em> · Floating habitat <em>platforms</em></div>
     <button class="popover-close" onclick="closePop('pop-platform')">×</button>
   </div>
   <div class="popover-body">
@@ -409,8 +711,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 <div class="popover" id="pop-layers">
   <div class="popover-header">
     <div class="popover-header-stripe"></div>
-    <div class="popover-eyebrow">Map layers</div>
-    <div class="popover-title">Data <em>layers</em></div>
+    <div class="popover-eyebrow">地图图层 · Map layers</div>
+    <div class="popover-title">数据<em>图层</em> · Data <em>layers</em></div>
     <button class="popover-close" onclick="closePop('pop-layers')">×</button>
   </div>
   <div class="popover-body">
@@ -429,19 +731,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 
 <!-- ══ MIGRATION LEGEND (bottom-right of map) ══ -->
 <div id="migration-legend">
-  <div class="ml-title">Migration routes</div>
+
+<!-- ══ DOCK — fixed left side ══ -->
+<div id="dock">
+  <div class="dock-btn" onclick="togglePop('pop-species')">
+    <svg viewBox="0 0 24 24"><path d="M3 9c0-1 .5-2 1.5-2.5S7 6 8 7c.5.5 1 1.5 1 2.5M21 9c0-1-.5-2-1.5-2.5S17 6 16 7c-.5.5-1 1.5-1 2.5M12 20c-4 0-7-3-7-7 0-2 1-4 2.5-5.5M12 20c4 0 7-3 7-7 0-2-1-4-2.5-5.5M12 20v-8m0 0c0-2 1-4 2.5-5M12 12c0-2-1-4-2.5-5"/></svg>
+    <span class="dock-tooltip">Species card</span>
+  </div>
+  <div class="dock-btn" onclick="togglePop('pop-mca')">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2" fill="rgba(200,215,218,0.75)"/><circle cx="15" cy="12" r="2" fill="rgba(200,215,218,0.75)"/><circle cx="7" cy="18" r="2" fill="rgba(200,215,218,0.75)"/></svg>
+    <span class="dock-tooltip">Habitat suitability model</span>
+  </div>
+  <div class="dock-btn" onclick="togglePop('pop-mangrove')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3"/><path d="M12 11v10M8 21h8M9 15c-2 0-4-1-4-3s2-3 4-3M15 15c2 0 4-1 4-3s-2-3-4-3"/></svg>
+    <span class="dock-tooltip">Mangrove timeline</span>
+  </div>
+  <div class="dock-btn" onclick="togglePop('pop-platform')">
+    <svg viewBox="0 0 24 24"><rect x="2" y="13" width="20" height="4" rx="1"/><path d="M6 13V9a2 2 0 014 0v4M14 13V9a2 2 0 014 0v4M4 17l-1 4M20 17l1 4"/></svg>
+    <span class="dock-tooltip">Platform info</span>
+  </div>
+  <div class="dock-btn" onclick="togglePop('pop-layers')">
+    <svg viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    <span class="dock-tooltip">Layers</span>
+  </div>
+</div>
+  <div class="ml-title">Migration routes <span class="zh">迁徙路线</span></div>
   <div class="ml-item">
     <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#7aaebb" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
     <div>
-      <div class="ml-label">Spring (Mar–May)</div>
-      <div class="ml-sub">Northbound · E. Indonesia → Korea</div>
+      <div class="ml-label">Spring (Mar–May) <span class="zh">春季北迁</span></div>
+      <div class="ml-sub">Northbound · E. Indonesia → Korea <span class="zh">印尼东部→朝鲜半岛</span></div>
     </div>
   </div>
   <div class="ml-item">
     <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#c49a52" stroke-width="2.5" stroke-dasharray="5,3"/></svg>
     <div>
-      <div class="ml-label">Fall (Aug–Oct)</div>
-      <div class="ml-sub">Southbound · Korea → E. Indonesia</div>
+      <div class="ml-label">Fall (Aug–Oct) <span class="zh">秋季南迁</span></div>
+      <div class="ml-sub">Southbound · Korea → E. Indonesia <span class="zh">朝鲜半岛→印尼东部</span></div>
     </div>
   </div>
 </div>
@@ -461,9 +787,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 (function(){
   const el=document.getElementById('sp-dots');
   if(!el) return;
-  for(let i=0;i<80;i++){
+  for(let i=0;i<200;i++){
     const d=document.createElement('div');
-    d.className='pop-dot '+(i<50?'alive':'lost');
+    d.className='pop-dot '+(i<200?'alive':'lost');
     el.appendChild(d);
   }
 })();
@@ -520,6 +846,79 @@ function showToast(msg){
 
 /* Datetime default */
 document.getElementById('f-datetime').value=new Date().toISOString().slice(0,16);
+
+/* ══ FAKE LIVE STREAM behaviour ══ */
+// Live clock in UTC+8 (Zhoushan local time)
+(function liveClock(){
+  function tick(){
+    const now=new Date();
+    const u8=new Date(now.getTime()+(8*60-now.getTimezoneOffset())*60000);
+    const p=n=>String(n).padStart(2,'0');
+    const el=document.getElementById('lc-ts');
+    if(el) el.textContent=`${u8.getUTCFullYear()}-${p(u8.getUTCMonth()+1)}-${p(u8.getUTCDate())} ${p(u8.getUTCHours())}:${p(u8.getUTCMinutes())}:${p(u8.getUTCSeconds())}`;
+  }
+  tick(); setInterval(tick,1000);
+})();
+
+// Gently fluctuating viewer count — feels alive
+(function liveViewers(){
+  let v=1204;
+  setInterval(()=>{
+    v+=Math.floor(Math.random()*9)-4;
+    if(v<980) v=980; if(v>1600) v=1600;
+    const el=document.getElementById('lc-viewers');
+    if(el) el.textContent=v.toLocaleString();
+  },2600);
+})();
+
+// Switch "camera" angle (crossfade between the live video feed and still angles)
+function switchCam(el){
+  document.querySelectorAll('.lc-cam-dot').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+  const feed=document.getElementById('lc-feed');
+  const old=document.getElementById('lc-feed-img');
+  old.classList.remove('show');
+  const isVideo=el.dataset.type==='video';
+  setTimeout(()=>{
+    const fresh=document.createElement(isVideo?'video':'img');
+    fresh.className='lc-feed-img';
+    fresh.id='lc-feed-img';
+    if(isVideo){
+      fresh.src=el.dataset.src; fresh.autoplay=true; fresh.loop=true;
+      fresh.muted=true; fresh.playsInline=true; fresh.setAttribute('playsinline','');
+    }else{
+      fresh.src=el.dataset.src; fresh.alt='nest cam';
+    }
+    old.replaceWith(fresh);
+    requestAnimationFrame(()=>fresh.classList.add('show'));
+    document.getElementById('lc-cam-name').innerHTML=el.dataset.name;
+    document.querySelector('.lc-loc').textContent=el.dataset.loc;
+  },350);
+}
+
+/* ══ Hide map-only UI when scrolled past the map section ══ */
+(function(){
+  const MAP_UI=[
+    '#alert-banner','#logo',
+    '#panel-sighting','#migration-legend','#cc',
+    '#live-cam','.popover'
+  ];
+  function setMapUI(visible){
+    MAP_UI.forEach(sel=>{
+      document.querySelectorAll(sel).forEach(el=>{
+        el.style.transition='opacity 0.35s, visibility 0.35s';
+        el.style.opacity   =visible?'':'0';
+        el.style.visibility=visible?'':'hidden';
+        el.style.pointerEvents=visible?'':'none';
+      });
+    });
+  }
+  function check(){
+    setMapUI(window.scrollY < window.innerHeight*0.9);
+  }
+  window.addEventListener('scroll',check,{passive:true});
+  check();
+})();
 </script>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
@@ -537,9 +936,9 @@ mapboxgl.accessToken='pk.eyJ1IjoiZW1tYWh1MjAwNjAxMzEiLCJhIjoiY21vNm8xMG5sMjN3djJ
 map=new mapboxgl.Map({
   container:'map',
   style:'mapbox://styles/emmahu20060131/cmodwrtal000t01sl8df9h15b?fresh=true',
-  center:[123,18],zoom:3.2,projection:'globe'
+  center:[123,18],zoom:2.0,projection:'globe'
 });
-map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
+
 
 map.on('click',e=>{
   if(!pinMode)return;
@@ -679,7 +1078,6 @@ function submitSighting(){
   ['f-species','f-lat','f-lng','f-count','f-notes','f-name'].forEach(id=>{document.getElementById(id).value='';});
   showToast('Sighting recorded. Thank you.');
 }
-document.getElementById('f-datetime').value=new Date().toISOString().slice(0,16);
 </script>
 </body>
 </html>
